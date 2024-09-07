@@ -62,6 +62,10 @@ namespace GAM
     /// @param iVertex index of the vertex.
     /// @return a vector of indices as unsigned int.
     std::vector<size_t> GetNeighboringFacesOfVertex(size_t iVertex) const;
+
+  private: 
+    /// @brief Checking the integrity of the mesh structure.
+    void IntegrityCheck() const; 
   
   private: 
     std::vector<Vertex> m_Vertices;

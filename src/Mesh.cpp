@@ -1,10 +1,12 @@
 #include "Mesh.hpp"
 
+#define DEBUG
+
 namespace GAM
 {
   void GAM::Mesh::Load(const std::string &OFFFile)
   {
-    std::ifstream file(OFFFile, std::ios::in);
+    std::ifstream file(OFFFile);
 
     // Checking if we can read the file 
     if (!file.is_open())
@@ -17,7 +19,11 @@ namespace GAM
     std::string type;
     file >> type; 
 
-    assert(type == "OFF");
+    if (type != "OFF")
+    {
+      std::cerr << "The format of the provided file must be OFF: " << OFFFile << "\n";
+      return;
+    }
 
     // Retrieving number of vertices / faces 
     size_t nVertices, nFaces, nEdges;
@@ -27,7 +33,7 @@ namespace GAM
     m_Faces.resize(nFaces);
 
     // Initializing position of vertices 
-    for (int i = 0; i < nVertices; ++i)
+    for (size_t i = 0; i < nVertices; ++i)
     { 
       Vertex vertex; 
       file >> vertex.X >> vertex.Y >> vertex.Z;
@@ -35,9 +41,9 @@ namespace GAM
       m_Vertices[i] = vertex;
     }
 
-    std::unordered_map<std::pair<int, int>, std::pair<int, int>, HashEdgePair> map; 
+    std::unordered_map<std::pair<size_t, size_t>, std::pair<size_t, int>, HashEdgePair> map; 
 
-    for (int i = 0; i < nFaces; ++i)
+    for (size_t i = 0; i < nFaces; ++i)
     {
       size_t v0, v1, v2;
       file >> nVertices >> v0 >> v1 >> v2;
@@ -55,33 +61,37 @@ namespace GAM
       m_Faces[i].Vertices[2] = v2;
       assert(m_Faces[i].Vertices[2] != -1);
 
+      // Set neighboring faces using the edges 
+      // Edge v0-v1
       if (map.find({v0, v1}) == map.end() && map.find({v1, v0}) == map.end())
       {
         map[{v0, v1}] = {i, 2};
       }
-      else 
+      else // The edge with v0 and v1 is already registered in map 
       {
         auto [FaceIndex, EdgeIndex] = map[{v1, v0}];
         m_Faces[FaceIndex].Neighbors[EdgeIndex] = i;
         m_Faces[i].Neighbors[2] = FaceIndex; 
       }
 
+      // Edge v1-v2
       if (map.find({v1, v2}) == map.end() && map.find({v2, v1}) == map.end())
       {
         map[{v1, v2}] = {i, 0};
       }
-      else 
+      else // The edge with v1 and v2 is already registered in map 
       {
         auto [FaceIndex, EdgeIndex] = map[{v2, v1}];
         m_Faces[FaceIndex].Neighbors[EdgeIndex] = i;
         m_Faces[i].Neighbors[0] = FaceIndex; 
       }
 
+      // Edge v2-v0
       if (map.find({v2, v0}) == map.end() && map.find({v0, v2}) == map.end())
       {
         map[{v2, v0}] = {i, 1};
       }
-      else 
+      else // The edge with v2 and v0 is already registered in map 
       {
         auto [FaceIndex, EdgeIndex] = map[{v0, v2}];
         m_Faces[FaceIndex].Neighbors[EdgeIndex] = i;
@@ -89,11 +99,19 @@ namespace GAM
       }
     }
 
+#ifdef DEBUG
+    IntegrityCheck();
+    std::cout << "Mesh successfully loaded!\n";
+#endif
+
     file.close();
   }
 
   size_t Mesh::GetVertexLocalIndex(size_t iVertex, size_t iFace) const
   {
+    assert(iFace < m_Faces.size());
+    assert(iVertex < m_Vertices.size());
+
     int localIndex = 0; 
 
     while (m_Faces[iFace].Vertices[localIndex] != iVertex && localIndex < 3) localIndex++;
@@ -103,17 +121,21 @@ namespace GAM
   
   void Mesh::PrintNeighboringFacesOfFace(size_t iFace) const
   {
+    assert(iFace < m_Faces.size());
+
     int i = 0; 
     std::cout << "--Neighboring faces of face " << iFace << "--\n";
     for (auto face : m_Faces[iFace].Neighbors)
     {
       std::cout << "Neighboring face " << i++ << ": " << face << "\n";
     }
-    std::cout << "\n";
+    std::cout << std::endl;
   }
 
   void Mesh::PrintNeighboringFacesOfVertex(size_t iVertex) const
   {
+    assert(iVertex < m_Vertices.size());
+
     auto& faceStartIndex = m_Vertices[iVertex].FaceIndex; 
     std::cout << "--Neighboring faces of vertex " << iVertex << "--\n";
     int i = 0; 
@@ -127,11 +149,13 @@ namespace GAM
       localVertexIndex = GetVertexLocalIndex(iVertex, currentFaceIndex);
       currentFaceIndex = m_Faces[currentFaceIndex].Neighbors[(localVertexIndex+1)%3];
     } 
-    std::cout << "\n";
+    std::cout << std::endl;
   }
 
   std::vector<size_t> Mesh::GetNeighboringFacesOfFace(size_t iFace) const
   {
+    assert(iFace < m_Faces.size());
+
     std::vector<size_t> neighbors;  
     for (auto face : m_Faces[iFace].Neighbors)
     {
@@ -142,6 +166,8 @@ namespace GAM
   
   std::vector<size_t> Mesh::GetNeighboringFacesOfVertex(size_t iVertex) const
   {
+    assert(iVertex < m_Vertices.size());
+
     std::vector<size_t> neighbors;
 
     neighbors.emplace_back(m_Vertices[iVertex].FaceIndex); 
@@ -155,5 +181,17 @@ namespace GAM
     } 
 
     return neighbors;
+  }
+
+  void Mesh::IntegrityCheck() const
+  {
+    for (size_t i = 0; i < m_Vertices.size(); ++i)
+    {
+      auto face = m_Faces[m_Vertices[i].FaceIndex];
+
+      assert(face.Vertices[0] == i ||
+             face.Vertices[1] == i ||
+             face.Vertices[2] == i);  
+    }
   }
 } // namespace GAM
