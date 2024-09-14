@@ -4,7 +4,7 @@
 
 namespace GAM
 {
-  void GAM::Mesh::Load(const std::string &OFFFile)
+  void GAM::Mesh::LoadOFF(const std::string &OFFFile)
   {
     std::ifstream file(OFFFile);
 
@@ -183,6 +183,33 @@ namespace GAM
     return neighbors;
   }
 
+  float Mesh::CalculateFaceArea(size_t iFace) const
+  {
+    const auto& f= m_Faces[iFace];
+    const Vertex& v0= m_Vertices[f.Vertices[0]];
+    const Vertex& v1= m_Vertices[f.Vertices[1]];
+    const Vertex& v2= m_Vertices[f.Vertices[2]];
+    Vector v0v1(v0, v1);
+    Vector v0v2(v0, v2);
+
+
+  
+    return 0.0f;
+  }
+
+  float Mesh::CalculatePatchAreaForVertex(size_t iVertex) const
+  {
+    auto iFaces= GetNeighboringFacesOfVertex(iVertex);
+
+    float area= 0.f;  
+    for(auto iFace : iFaces)
+    {
+      area+= CalculateFaceArea(iFace);
+    }
+
+    return area/3;
+  }
+
   void Mesh::IntegrityCheck() const
   {
     for (size_t i = 0; i < m_Vertices.size(); ++i)
@@ -194,4 +221,34 @@ namespace GAM
              face.Vertices[2] == i);  
     }
   }
+  
+  Vector operator*(float s, const Vector &V)
+  {
+    return Vector(s*V.X, s*V.Y, s*V.Z);
+  }
+
+  Vector operator*(const Vector &V, float s)
+  {
+    return s*V;
+  }
+
+  Vector operator/(const Vector &V, float d)
+  {
+    assert(d > 0. || d < 0.);
+    float id= 1./d;
+    return id*V;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Vector &V)
+  {
+    out << "Vector : [" << V.X << ", " << V.Y << ", " << V.Z << "]";
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Vertex &V)
+  {
+    out << "Vertex : [" << V.X << ", " << V.Y << ", " << V.Z << "]";
+    return out;
+  }
+
 } // namespace GAM
