@@ -33,9 +33,8 @@ int main(int argc, char** argv)
 #endif
 #endif
 
-  GAM::Vector u(1., 5., 4.); 
-  float norm= u.norm2();
-  std::cout << u.normalize() << "\n";
-  std::cout << "norm of a normalized vector: " << u.normalize().norm() << "\n";
-  std::cout << "Norm of u: " << norm << std::endl;
+  mesh.LoadOFF("../../data/cube_maillage_triangles.off");
+  auto test= mesh.GetNeighboringVerticesOfVertex(0); 
+  for(auto e : test) std::cout << e << " ";
+  std::cout << std::endl;
 }

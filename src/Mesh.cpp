@@ -12,7 +12,7 @@ namespace GAM
     if (!file.is_open())
     {
       std::cerr << "Couldn't open this file: " << OFFFile << "\n";
-      return;
+      exit(1);
     }
 
     // Checking file type 
@@ -22,18 +22,18 @@ namespace GAM
     if (type != "OFF")
     {
       std::cerr << "The format of the provided file must be OFF: " << OFFFile << "\n";
-      return;
+      exit(1);
     }
 
     // Retrieving number of vertices / faces 
-    size_t nVertices, nFaces, nEdges;
+    IndexType nVertices, nFaces, nEdges;
     file >> nVertices >> nFaces >> nEdges; 
 
     m_Vertices.resize(nVertices);
     m_Faces.resize(nFaces);
 
     // Initializing position of vertices 
-    for (size_t i = 0; i < nVertices; ++i)
+    for (IndexType i = 0; i < nVertices; ++i)
     { 
       Vertex vertex; 
       file >> vertex.X >> vertex.Y >> vertex.Z;
@@ -41,11 +41,11 @@ namespace GAM
       m_Vertices[i] = vertex;
     }
 
-    std::unordered_map<std::pair<size_t, size_t>, std::pair<size_t, int>, HashEdgePair> map; 
+    std::unordered_map<std::pair<IndexType, IndexType>, std::pair<IndexType, int>, HashEdgePair> map; 
 
-    for (size_t i = 0; i < nFaces; ++i)
+    for (IndexType i = 0; i < nFaces; ++i)
     {
-      size_t v0, v1, v2;
+      IndexType v0, v1, v2;
       file >> nVertices >> v0 >> v1 >> v2;
 
       // Set FaceIndex for each vertex if it's not already the case 
@@ -107,7 +107,7 @@ namespace GAM
     file.close();
   }
 
-  size_t Mesh::GetVertexLocalIndex(size_t iVertex, size_t iFace) const
+  IndexType Mesh::GetVertexLocalIndex(IndexType iVertex, IndexType iFace) const
   {
     assert(iFace < m_Faces.size());
     assert(iVertex < m_Vertices.size());
@@ -119,7 +119,7 @@ namespace GAM
     return localIndex;
   }
   
-  void Mesh::PrintNeighboringFacesOfFace(size_t iFace) const
+  void Mesh::PrintNeighboringFacesOfFace(IndexType iFace) const
   {
     assert(iFace < m_Faces.size());
 
@@ -132,7 +132,7 @@ namespace GAM
     std::cout << std::endl;
   }
 
-  void Mesh::PrintNeighboringFacesOfVertex(size_t iVertex) const
+  void Mesh::PrintNeighboringFacesOfVertex(IndexType iVertex) const
   {
     assert(iVertex < m_Vertices.size());
 
@@ -141,8 +141,8 @@ namespace GAM
     int i = 0; 
     std::cout << "Neighboring face " << i++ << ": " << faceStartIndex << "\n";
 
-    size_t localVertexIndex = GetVertexLocalIndex(iVertex, faceStartIndex);
-    size_t currentFaceIndex = m_Faces[faceStartIndex].Neighbors[(localVertexIndex+1)%3];
+    IndexType localVertexIndex = GetVertexLocalIndex(iVertex, faceStartIndex);
+    IndexType currentFaceIndex = m_Faces[faceStartIndex].Neighbors[(localVertexIndex+1)%3];
     while (currentFaceIndex != faceStartIndex)
     {
       std::cout << "Neighboring face " << i++ << ": " << currentFaceIndex << "\n";
@@ -152,11 +152,11 @@ namespace GAM
     std::cout << std::endl;
   }
 
-  std::vector<size_t> Mesh::GetNeighboringFacesOfFace(size_t iFace) const
+  std::vector<IndexType> Mesh::GetNeighboringFacesOfFace(IndexType iFace) const
   {
     assert(iFace < m_Faces.size());
 
-    std::vector<size_t> neighbors;  
+    std::vector<IndexType> neighbors;  
     for (auto face : m_Faces[iFace].Neighbors)
     {
       neighbors.emplace_back(face);
@@ -164,15 +164,15 @@ namespace GAM
     return neighbors;
   }
   
-  std::vector<size_t> Mesh::GetNeighboringFacesOfVertex(size_t iVertex) const
+  std::vector<IndexType> Mesh::GetNeighboringFacesOfVertex(IndexType iVertex) const
   {
     assert(iVertex < m_Vertices.size());
 
-    std::vector<size_t> neighbors;
+    std::vector<IndexType> neighbors;
 
     neighbors.emplace_back(m_Vertices[iVertex].FaceIndex); 
-    size_t localVertexIndex = GetVertexLocalIndex(iVertex, neighbors[0]);
-    size_t currentFaceIndex = m_Faces[neighbors[0]].Neighbors[(localVertexIndex+1)%3];
+    IndexType localVertexIndex = GetVertexLocalIndex(iVertex, neighbors[0]);
+    IndexType currentFaceIndex = m_Faces[neighbors[0]].Neighbors[(localVertexIndex+1)%3];
     while (currentFaceIndex != neighbors[0])
     {
       neighbors.emplace_back(currentFaceIndex); 
@@ -183,8 +183,35 @@ namespace GAM
     return neighbors;
   }
 
-  float Mesh::CalculateFaceArea(size_t iFace) const
+  std::vector<IndexType> Mesh::GetNeighboringVerticesOfVertex(IndexType iVertex) const
   {
+    assert(iVertex < m_Vertices.size());
+
+    std::vector<IndexType> neighbors;
+    assert(m_Vertices[iVertex].FaceIndex != -1);
+    IndexType startFaceIndex= m_Vertices[iVertex].FaceIndex;  
+    IndexType currentFaceIndex= startFaceIndex;  
+    IndexType localIndex= GetVertexLocalIndex(iVertex, currentFaceIndex);
+    IndexType nextVertexLocalIndex= (localIndex+1)%3;
+    IndexType nextVertexGlobalIndex= m_Faces[currentFaceIndex].Vertices[nextVertexLocalIndex];
+    neighbors.emplace_back(nextVertexGlobalIndex);
+    currentFaceIndex= m_Faces[currentFaceIndex].Neighbors[nextVertexLocalIndex];
+    while (currentFaceIndex != startFaceIndex)
+    {
+      localIndex= GetVertexLocalIndex(iVertex, currentFaceIndex);
+      nextVertexLocalIndex= (localIndex+1)%3;
+      nextVertexGlobalIndex= m_Faces[currentFaceIndex].Vertices[nextVertexLocalIndex];
+      neighbors.emplace_back(nextVertexGlobalIndex);
+      currentFaceIndex= m_Faces[currentFaceIndex].Neighbors[nextVertexLocalIndex];
+    }
+
+    return neighbors;
+  }
+
+  ScalarType Mesh::CalculateFaceArea(IndexType iFace) const
+  {
+    assert(iFace < m_Faces.size());
+
     const auto& f= m_Faces[iFace];
     const Vertex& v0= m_Vertices[f.Vertices[0]];
     const Vertex& v1= m_Vertices[f.Vertices[1]];
@@ -192,17 +219,19 @@ namespace GAM
     Vector v0v1(v0, v1);
     Vector v0v2(v0, v2);
 
-
-  
-    return 0.0f;
+    Vector n= v0v1.Cross(v0v2);
+    
+    return n.Norm()*0.5;
   }
 
-  float Mesh::CalculatePatchAreaForVertex(size_t iVertex) const
+  ScalarType Mesh::CalculatePatchAreaForVertex(IndexType iVertex) const
   {
+    assert(iVertex < m_Vertices.size());
+
     auto iFaces= GetNeighboringFacesOfVertex(iVertex);
 
-    float area= 0.f;  
-    for(auto iFace : iFaces)
+    ScalarType area= 0.f;  
+    for (auto iFace : iFaces)
     {
       area+= CalculateFaceArea(iFace);
     }
@@ -210,9 +239,24 @@ namespace GAM
     return area/3;
   }
 
+  std::vector<ScalarType> Mesh::CalculateCotangentLaplacian(std::vector<ScalarType> U) const
+  {
+    assert(U.size()==m_Vertices.size());
+
+    std::vector<ScalarType> laplacians(U.size());
+    for (const auto& [i, iVertex] : utils::enumerate(m_Vertices))
+    { 
+      ScalarType lu= 0.;
+      //!TODO Sum of cotangente values multiplied by the magnitude of uij  
+      laplacians[i]= lu/(2.*CalculatePatchAreaForVertex(i));
+    }
+
+    return laplacians; 
+  }
+
   void Mesh::IntegrityCheck() const
   {
-    for (size_t i = 0; i < m_Vertices.size(); ++i)
+    for (IndexType i = 0; i < m_Vertices.size(); ++i)
     {
       auto face = m_Faces[m_Vertices[i].FaceIndex];
 
@@ -222,20 +266,20 @@ namespace GAM
     }
   }
   
-  Vector operator*(float s, const Vector &V)
+  Vector operator*(ScalarType s, const Vector &V)
   {
     return Vector(s*V.X, s*V.Y, s*V.Z);
   }
 
-  Vector operator*(const Vector &V, float s)
+  Vector operator*(const Vector &V, ScalarType s)
   {
     return s*V;
   }
 
-  Vector operator/(const Vector &V, float d)
+  Vector operator/(const Vector &V, ScalarType d)
   {
     assert(d > 0. || d < 0.);
-    float id= 1./d;
+    ScalarType id= 1./d;
     return id*V;
   }
 
