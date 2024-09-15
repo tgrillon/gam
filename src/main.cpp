@@ -34,7 +34,9 @@ int main(int argc, char** argv)
 #endif
 
   mesh.LoadOFF("../../data/cube_maillage_triangles.off");
-  auto test= mesh.GetNeighboringVerticesOfVertex(0); 
-  for(auto e : test) std::cout << e << " ";
-  std::cout << std::endl;
+  std::vector<GAM::ScalarType> U(mesh.GetNumberOfVertex());
+  U[0]= 1;
+  auto Lu= mesh.CalculateCotangentLaplacian(U);
+  for (const auto& [i, v] : utils::enumerate(Lu)) 
+    std::cout << i << ": " << v << "\n";
 }

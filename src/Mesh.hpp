@@ -53,9 +53,7 @@ namespace GAM
 
     inline Vector Cross(const Vector& V) const { return Vector(Y*V.Z-Z*V.Y, Z*V.X-X*V.Z, X*V.Y-Y*V.X); }
 
-    inline ScalarType SinTheta(const Vector& V) const { return (this->Cross(V)).Norm()/(this->Norm()*V.Norm()); }
-    inline ScalarType CosTheta(const Vector& V) const { return this->Dot(V)/(this->Norm()*V.Norm()); }
-    inline ScalarType CotTheta(const Vector& V) const { return this->CosTheta(V)/this->SinTheta(V); }
+    inline ScalarType Cotan(const Vector& V) const { return this->Dot(V)/(this->Cross(V)).Norm(); }
 
     friend Vector operator*(ScalarType s, const Vector& V);
     friend Vector operator*(const Vector& V, ScalarType s);
