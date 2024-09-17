@@ -14,7 +14,7 @@
 
 namespace GAM 
 {
-  using ScalarType= float;
+  using ScalarType= double;
   using IndexType= size_t;
 
   struct HashEdgePair
@@ -45,24 +45,34 @@ namespace GAM
       Z= q.Z-p.Z;
     }
 
-    /// @brief Calculate the dot product between this and V.
+    /// @brief Calculate the dot product between `this` and V.
     /// @param V a vector.
     /// @return the value of the dot product.  
     inline ScalarType Dot(const Vector& V) const { return X*V.X+Y*V.Y+Z*V.Z; }
 
-    /// @brief Calculate the magnitude²/norm² of this.
-    /// @return the norm² of this.
-    inline ScalarType Norm2() const { return X*X+Y*Y+Z*Z; };
-
-    /// @brief Calculate the magnitude/norm of this.
-    /// @return the norm of this.
-    inline ScalarType Norm() const { return std::sqrt(Norm2()); }
-
-    inline Vector Normalized() const { return (*this)/this->Norm(); }
-    inline void Normalize() { (*this)= this->Normalized(); }
-
+    /// @brief Calculate the cross product between `this` and V.
+    /// @param V a vector.
+    /// @return the orthogonal vector to `this` and V.
     inline Vector Cross(const Vector& V) const { return Vector(Y*V.Z-Z*V.Y, Z*V.X-X*V.Z, X*V.Y-Y*V.X); }
 
+    /// @brief Calculate the magnitude²/norm² of `this`.
+    /// @return the norm² of `this`.
+    inline ScalarType Norm2() const { return X*X+Y*Y+Z*Z; };
+
+    /// @brief Calculate the magnitude/norm of `this`.
+    /// @return the norm of `this`.
+    inline ScalarType Norm() const { return std::sqrt(Norm2()); }
+
+    /// @brief Normalize `this`.
+    inline void Normalize() { (*this)= this->Normalized(); }
+
+    /// @brief Return a normalize vector.
+    /// @return the normalized vector of `this`. 
+    inline Vector Normalized() const { return (*this)/this->Norm(); }
+
+    /// @brief Calculate the cotangent between `this` and V.
+    /// @param V a vector.
+    /// @return the value of cot(theta) with theta the angle between `this` and V.
     inline ScalarType Cotan(const Vector& V) const { return this->Dot(V)/(this->Cross(V)).Norm(); }
 
     friend Vector operator*(ScalarType s, const Vector& V);
@@ -103,7 +113,7 @@ namespace GAM
 
     /// @brief Save the mesh as an .obj file. 
     /// @param OBJFile name of the .obj file.  
-    void SaveAsOBJ(const std::string& OBJFile);
+    void SaveOBJ(const std::string& OBJFile);
 
     /// @brief Get the local index for a vertex located on the face of index `iFace`.
     /// @param iVertex index of the vertex.
@@ -159,7 +169,6 @@ namespace GAM
     /// @param U 
     /// @return 
     Vector CalculateCotangentLaplacianAtVertex(IndexType iVertex) const;
-
 
     /// @brief Checking the integrity of the mesh structure.
     void IntegrityCheck() const; 

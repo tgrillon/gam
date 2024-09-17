@@ -107,7 +107,7 @@ namespace GAM
     file.close();
   }
 
-  void Mesh::SaveAsOBJ(const std::string &OBJFile)
+  void Mesh::SaveOBJ(const std::string &OBJFile)
   {
     std::ofstream file(OBJFile);
     file << "OFF" << "\n";
