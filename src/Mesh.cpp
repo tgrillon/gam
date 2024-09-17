@@ -107,6 +107,30 @@ namespace GAM
     file.close();
   }
 
+  void Mesh::SaveAsOBJ(const std::string &OBJFile)
+  {
+    std::ofstream file(OBJFile);
+    file << "OFF" << "\n";
+    file << GetNumberOfVertex() << " " << GetNumberOfFace() << " " << 0 << "\n";
+    
+    // Save vertices position
+    for (const auto& v : m_Vertices)
+    {
+      file << "v " << v.X << " " << v.Y << " " << v.Z << "\n";  
+    }
+
+    // Save topology
+    for (const auto& f : m_Faces)
+    {
+      file << "f ";
+      file << f.Vertices[0] << " ";  
+      file << f.Vertices[1] << " ";  
+      file << f.Vertices[2] << "\n";
+    }
+
+    file.close();
+  }
+
   IndexType Mesh::GetVertexLocalIndex(IndexType iVertex, IndexType iFace) const
   {
     assert(iFace<m_Faces.size());
@@ -229,7 +253,6 @@ namespace GAM
     assert(iVertex<m_Vertices.size());
 
     auto iFaces= GetNeighboringFacesOfVertex(iVertex);
-
     ScalarType area= 0.f;  
     for (auto iFace : iFaces)
     {
@@ -239,38 +262,71 @@ namespace GAM
     return area/3;
   }
 
-  std::vector<ScalarType> Mesh::CalculateCotangentLaplacian(std::vector<ScalarType> U) const
+  void Mesh::CalculateCotangentLaplacian(std::vector<ScalarType>& U) const
   {
     assert(U.size()==m_Vertices.size());
 
-    std::vector<ScalarType> laplacians(U.size());
-    for (const auto& [index, vertex] : utils::enumerate(m_Vertices))
+    std::vector<ScalarType> laplacians= U;
+    for (IndexType i=1; i<m_Vertices.size(); ++i)
     { 
-      ScalarType Lui= 0.;
-      auto neighboringVertices= GetNeighboringVerticesOfVertex(index);  
-      auto numOfNeighbors= neighboringVertices.size();
-      for (size_t j= 1; j <= numOfNeighbors; ++j)
-      {
-        assert(j-1<numOfNeighbors && j-1>=0);
-        IndexType& vertexJIndex= neighboringVertices[j%numOfNeighbors];
-        // Neighbor Vertex Index Minus 1
-        IndexType& vertexJPrevIndex= neighboringVertices[j-1]; 
-        // Neighbor Vertex Index Plus 1
-        IndexType& vertexJNextIndex= neighboringVertices[(j+1)%numOfNeighbors]; 
-        ScalarType uj= U[vertexJIndex]; 
-        ScalarType ui= U[index];
-        Vector v(m_Vertices[vertexJPrevIndex], m_Vertices[vertexJIndex]); 
-        Vector w(m_Vertices[vertexJPrevIndex], vertex);
-        ScalarType cotAlpha= v.Cotan(w); 
-        v= Vector(m_Vertices[vertexJNextIndex], vertex);
-        w= Vector(m_Vertices[vertexJNextIndex], m_Vertices[vertexJIndex]);
-        ScalarType cotBeta= v.Cotan(w); 
-        Lui+= (cotAlpha+cotBeta)*(uj-ui);
-      }
-      laplacians[index]= Lui/(2.*CalculatePatchAreaForVertex(index));
+      laplacians[i]= CalculateCotangentLaplacianAtVertex(i, U);
     }
 
-    return laplacians; 
+    U= laplacians;
+  }
+
+  ScalarType Mesh::CalculateCotangentLaplacianAtVertex(IndexType iVertex, std::vector<ScalarType>& U) const
+  {
+    Vertex vertex= m_Vertices[iVertex];
+    ScalarType Lui= 0.;
+    auto neighboringVertices= GetNeighboringVerticesOfVertex(iVertex);  
+    auto numOfNeighbors= neighboringVertices.size();
+    for (size_t j= 1; j < numOfNeighbors; ++j)
+    {
+      assert(j-1<numOfNeighbors && j-1>=0);
+      IndexType& vertexJIndex= neighboringVertices[j];
+      // Neighbor Vertex Index Minus 1
+      IndexType& vertexJPrevIndex= neighboringVertices[j-1]; 
+      // Neighbor Vertex Index Plus 1
+      IndexType& vertexJNextIndex= neighboringVertices[(j+1)%numOfNeighbors]; 
+      ScalarType uj= U[vertexJIndex]; 
+      ScalarType ui= U[iVertex];
+      Vector v(m_Vertices[vertexJPrevIndex], m_Vertices[vertexJIndex]); 
+      Vector w(m_Vertices[vertexJPrevIndex], vertex);
+      ScalarType cotAlpha= v.Cotan(w); 
+      v= Vector(m_Vertices[vertexJNextIndex], vertex);
+      w= Vector(m_Vertices[vertexJNextIndex], m_Vertices[vertexJIndex]);
+      ScalarType cotBeta= v.Cotan(w); 
+      Lui+= (cotAlpha+cotBeta)*(uj-ui);
+    }
+    return Lui/(2.*CalculatePatchAreaForVertex(iVertex));
+  }
+
+  Vector Mesh::CalculateCotangentLaplacianAtVertex(IndexType iVertex) const
+  {
+    Vector Lui;
+    auto neighboringVertices= GetNeighboringVerticesOfVertex(iVertex);  
+    auto numOfNeighbors= neighboringVertices.size();
+    for (size_t j= 1; j < numOfNeighbors; ++j)
+    {
+      assert(j-1<numOfNeighbors && j-1>=0);
+
+      IndexType& vertexJIndex= neighboringVertices[j];
+      // Neighbor Vertex Index Minus 1
+      IndexType& vertexJPrevIndex= neighboringVertices[j-1]; 
+      // Neighbor Vertex Index Plus 1
+      IndexType& vertexJNextIndex= neighboringVertices[(j+1)%numOfNeighbors]; 
+      Vertex uj= m_Vertices[vertexJIndex]; 
+      Vertex ui= m_Vertices[iVertex];
+      Vector v(m_Vertices[vertexJPrevIndex], m_Vertices[vertexJIndex]); 
+      Vector w(m_Vertices[vertexJPrevIndex], ui);
+      ScalarType cotAlpha= v.Cotan(w); 
+      v= Vector(m_Vertices[vertexJNextIndex], ui);
+      w= Vector(m_Vertices[vertexJNextIndex], m_Vertices[vertexJIndex]);
+      ScalarType cotBeta= v.Cotan(w); 
+      Lui+= (cotAlpha+cotBeta)*Vector(ui, uj);
+    }
+    return Lui/(2.*CalculatePatchAreaForVertex(iVertex));
   }
 
   void Mesh::IntegrityCheck() const
@@ -300,6 +356,21 @@ namespace GAM
     assert(d > 0. || d<0.);
     ScalarType id= 1./d;
     return id*V;
+  }
+
+  Vector operator/(const Vector &U, const Vector &V)
+  {
+    return Vector(U.X/V.X, U.Y/V.Y, U.Z/V.Z);
+  }
+
+  Vector operator+(const Vector &U, const Vector &V)
+  {
+    return Vector(U.X+V.X, U.Y+V.Y, U.Z+V.Z);
+  }
+
+  Vector operator+=(const Vector &U, const Vector &V)
+  {
+    return U+V;
   }
 
   std::ostream &operator<<(std::ostream &out, const Vector &V)

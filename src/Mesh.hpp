@@ -35,6 +35,7 @@ namespace GAM
 
   struct Vector 
   {
+    Vector() : X(0), Y(0), Z(0) {}
     Vector(ScalarType x, ScalarType y, ScalarType z) : X(x), Y(y), Z(z) {}
 
     Vector(const Vertex& p, const Vertex& q)
@@ -44,8 +45,17 @@ namespace GAM
       Z= q.Z-p.Z;
     }
 
+    /// @brief Calculate the dot product between this and V.
+    /// @param V a vector.
+    /// @return the value of the dot product.  
     inline ScalarType Dot(const Vector& V) const { return X*V.X+Y*V.Y+Z*V.Z; }
+
+    /// @brief Calculate the magnitude²/norm² of this.
+    /// @return the norm² of this.
     inline ScalarType Norm2() const { return X*X+Y*Y+Z*Z; };
+
+    /// @brief Calculate the magnitude/norm of this.
+    /// @return the norm of this.
     inline ScalarType Norm() const { return std::sqrt(Norm2()); }
 
     inline Vector Normalized() const { return (*this)/this->Norm(); }
@@ -58,6 +68,9 @@ namespace GAM
     friend Vector operator*(ScalarType s, const Vector& V);
     friend Vector operator*(const Vector& V, ScalarType s);
     friend Vector operator/(const Vector& V, ScalarType d);
+    friend Vector operator/(const Vector& U, const Vector& V);
+    friend Vector operator+(const Vector& U, const Vector& V);
+    friend Vector operator+=(const Vector& U, const Vector& V);
 
     friend std::ostream& operator<<(std::ostream& out, const Vector& V);
 
@@ -87,6 +100,10 @@ namespace GAM
     /// @brief Load and triangulate a mesh from an OFF file. 
     /// @param OFFFile the path of an .off file. 
     void LoadOFF(const std::string& OFFFile);
+
+    /// @brief Save the mesh as an .obj file. 
+    /// @param OBJFile name of the .obj file.  
+    void SaveAsOBJ(const std::string& OBJFile);
 
     /// @brief Get the local index for a vertex located on the face of index `iFace`.
     /// @param iVertex index of the vertex.
@@ -130,9 +147,20 @@ namespace GAM
     /// @brief Calculate the Laplacian of a discrete function defined on the mesh.
     /// @param U the scalar function known at each vertex of the mesh. 
     /// @return An array of Laplacian values for each vertex.  
-    std::vector<ScalarType> CalculateCotangentLaplacian(std::vector<ScalarType> U) const;
+    void CalculateCotangentLaplacian(std::vector<ScalarType>& U) const;
 
   private: 
+    /// @brief Calculate cotangente Laplacian value at vertex of index iVertex.
+    /// @param iVertex index of the vertex.
+    ScalarType CalculateCotangentLaplacianAtVertex(IndexType iVertex, std::vector<ScalarType>& U) const;
+
+    /// @brief 
+    /// @param iVertex 
+    /// @param U 
+    /// @return 
+    Vector CalculateCotangentLaplacianAtVertex(IndexType iVertex) const;
+
+
     /// @brief Checking the integrity of the mesh structure.
     void IntegrityCheck() const; 
   
