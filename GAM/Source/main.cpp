@@ -22,8 +22,8 @@ std::chrono::microseconds duration;
 int main(int argc, char** argv)
 {
   GAM::TMesh mesh; 
-
-  std::string fileOFF= argc > 1 ? argv[1] : "/cube_maillage_triangles.off"; 
+  std::string filename= argc > 1 ? argv[1] : "cube_maillage_triangles"; 
+  std::string fileOFF= "/" + filename + ".off"; 
 #ifdef CONNECTIVITY_TEST
 #ifdef DEBUG
   ELAPSED_TIME(mesh.LoadOFF(fileOFF));
@@ -36,14 +36,10 @@ int main(int argc, char** argv)
 #endif
 #endif
 
-  std::string outputFile= "/queen.obj"; 
+  std::string outputFile= "/" + filename + ".obj"; 
   mesh.LoadOFF(fileOFF);
   mesh.ComputeNormals();
-  // std::vector<GAM::ScalarType> U(mesh.GetNumberOfVertex());
-  // U[0]= 1;
-  // mesh.CotangentLaplacian(U);
-  // for (const auto& [i, v] : utils::enumerate(U)) 
-    // std::cout << i << ": " << v << "\n";
+
   mesh.SaveOBJ(outputFile);
 
   Application app(outputFile);

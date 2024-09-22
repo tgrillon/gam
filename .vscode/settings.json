@@ -77,7 +77,7 @@
     "variant": "cpp"
   }, 
   "cmake.debugConfig": {
-    "args": ["../../data/queen.off"]
-    // "args": ["../../data/sphere.off"]
+    "args": ["queen"]
+    // "args": ["sphere"]
   }
 }
