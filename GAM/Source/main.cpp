@@ -21,7 +21,7 @@ std::chrono::microseconds duration;
 
 int main(int argc, char** argv)
 {
-  GAM::Mesh mesh; 
+  GAM::TMesh mesh; 
 
   std::string fileOFF= argc > 1 ? argv[1] : "/cube_maillage_triangles.off"; 
 #ifdef CONNECTIVITY_TEST
@@ -38,9 +38,10 @@ int main(int argc, char** argv)
 
   std::string outputFile= "/queen.obj"; 
   mesh.LoadOFF(fileOFF);
+  mesh.ComputeNormals();
   // std::vector<GAM::ScalarType> U(mesh.GetNumberOfVertex());
   // U[0]= 1;
-  // mesh.CalculateCotangentLaplacian(U);
+  // mesh.CotangentLaplacian(U);
   // for (const auto& [i, v] : utils::enumerate(U)) 
     // std::cout << i << ": " << v << "\n";
   mesh.SaveOBJ(outputFile);
