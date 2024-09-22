@@ -35,6 +35,11 @@ namespace GAM
 
   struct Vector 
   {
+    inline static Vector UnitX() { return {1., 0., 0.}; }
+    inline static Vector UnitY() { return {0., 1., 0.}; }
+    inline static Vector UnitZ() { return {0., 0., 1.}; }
+    inline static Vector Null()  { return {0., 0., 0.}; }
+
     Vector() : X(0), Y(0), Z(0) {}
     Vector(ScalarType x, ScalarType y, ScalarType z) : X(x), Y(y), Z(z) {}
 
@@ -80,7 +85,9 @@ namespace GAM
     friend Vector operator/(const Vector& V, ScalarType d);
     friend Vector operator/(const Vector& U, const Vector& V);
     friend Vector operator+(const Vector& U, const Vector& V);
+    friend Vector operator-(const Vector& U, const Vector& V);
     friend Vector operator+=(const Vector& U, const Vector& V);
+    friend Vector operator-=(const Vector& U, const Vector& V);
 
     friend std::ostream& operator<<(std::ostream& out, const Vector& V);
 
@@ -94,10 +101,15 @@ namespace GAM
     int Neighbors[3] { -1, -1, -1 };
   };
 
-  class Mesh 
+  class TMesh 
   {
   public:
-    Mesh()=default; 
+    TMesh()=default; 
+    TMesh(const std::vector<ScalarType>& values) : m_Values(values) {} 
+
+    inline void SetVerticesValues(const std::vector<ScalarType>& values) { m_Values= values; }
+    inline std::vector<ScalarType> GetVerticesValues(const std::vector<ScalarType>& values) const { return m_Values; }
+    inline ScalarType GetVertexValue(IndexType iVertex) const { return m_Values[iVertex]; }
 
     /// @brief Get the number of vertex of the mesh. 
     /// @return the number of vertex.
@@ -147,35 +159,45 @@ namespace GAM
     /// @brief Calculate the area of the face of index iFace.
     /// @param iFace index of the face.
     /// @return a scalar corresponding to the area of the face.
-    ScalarType CalculateFaceArea(IndexType iFace) const;
+    ScalarType FaceArea(IndexType iFace) const;
 
     /// @brief Calculate the area of the patch of surface corresponding to the vertex of index iVertex.
     /// @param iVertex index of the vertex. 
     /// @return a scalar corresponding to the area of the patch.
-    ScalarType CalculatePatchAreaForVertex(IndexType iVertex) const;
+    ScalarType PatchAreaForVertex(IndexType iVertex) const;
  
     /// @brief Calculate the Laplacian of a discrete function defined on the mesh.
-    /// @param U the scalar function known at each vertex of the mesh. 
     /// @return An array of Laplacian values for each vertex.  
-    void CalculateCotangentLaplacian(std::vector<ScalarType>& U) const;
+    void CotangentLaplacian();
+
+    /// @brief Compute normal of each vertex of the mesh. 
+    void ComputeNormals();
 
   private: 
     /// @brief Calculate cotangente Laplacian value at vertex of index iVertex.
     /// @param iVertex index of the vertex.
-    ScalarType CalculateCotangentLaplacianAtVertex(IndexType iVertex, std::vector<ScalarType>& U) const;
+    ScalarType CotangentLaplacian(IndexType iVertex);
 
-    /// @brief 
-    /// @param iVertex 
-    /// @param U 
-    /// @return 
-    Vector CalculateCotangentLaplacianAtVertex(IndexType iVertex) const;
+    /// @brief Calculate the normal of a vertex using the cotangent Laplacian. 
+    /// @param iVertex index of the vertex.
+    /// @return the normal of the vertex.
+    Vector VertexNormal(IndexType iVertex);
 
     /// @brief Checking the integrity of the mesh structure.
     void IntegrityCheck() const; 
   
   private: 
+    /// @brief Vertices of the mesh.
     std::vector<Vertex> m_Vertices;
+
+    /// @brief Sewn-together faces of the mesh. 
     std::vector<Face> m_Faces;
+
+    /// @brief Vertices normales (must be of the same size as m_Vertices).
+    std::vector<Vector> m_Normals;
+
+    /// @brief Vertices values (must be of the same size as m_Vertices). 
+    std::vector<ScalarType> m_Values;
   };
 
 } // namespace GAM

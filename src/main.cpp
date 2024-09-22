@@ -1,4 +1,4 @@
-#include "Mesh.hpp"
+#include "mesh.h"
 
 #include <chrono>
 
@@ -20,7 +20,7 @@ std::chrono::microseconds duration;
 
 int main(int argc, char** argv)
 {
-  GAM::Mesh mesh; 
+  GAM::TMesh mesh; 
 
   std::string fileOFF= argc > 1 ? argv[1] : "../../data/cube_maillage_triangles.off"; 
 #ifdef CONNECTIVITY_TEST
@@ -36,10 +36,11 @@ int main(int argc, char** argv)
 #endif
 
   mesh.LoadOFF(fileOFF);
+  mesh.ComputeNormals();
   // std::vector<GAM::ScalarType> U(mesh.GetNumberOfVertex());
   // U[0]= 1;
-  // mesh.CalculateCotangentLaplacian(U);
+  // mesh.CotangentLaplacian(U);
   // for (const auto& [i, v] : utils::enumerate(U)) 
     // std::cout << i << ": " << v << "\n";
-  mesh.SaveAsOBJ("test.obj");
+  mesh.SaveOBJ("queen.obj");
 }
