@@ -10,7 +10,7 @@ out vec3 vertex_normal;
 void main( )
 {
     gl_Position= vec4(position, 1);
-    vertex_normal= normal;
+    vertex_normal= normalize(normal);
 }
 #endif
 

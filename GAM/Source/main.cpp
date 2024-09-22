@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "TMesh.h"
 #include "Application.h"
 
 #include <chrono>
@@ -8,7 +8,7 @@ std::chrono::high_resolution_clock::time_point stop;
 
 std::chrono::microseconds duration;
 
-#define ELAPSED_TIME(func) \
+#define MEASURE_TIME(func) \
         start = std::chrono::high_resolution_clock::now(); \
         func; \
         stop = std::chrono::high_resolution_clock::now(); \
@@ -26,9 +26,9 @@ int main(int argc, char** argv)
   std::string fileOFF= "/" + filename + ".off"; 
 #ifdef CONNECTIVITY_TEST
 #ifdef DEBUG
-  ELAPSED_TIME(mesh.LoadOFF(fileOFF));
-  ELAPSED_TIME(mesh.PrintNeighboringFacesOfFace(2));
-  ELAPSED_TIME(mesh.PrintNeighboringFacesOfVertex(2)); 
+  MEASURE_TIME(mesh.LoadOFF(fileOFF));
+  MEASURE_TIME(mesh.PrintNeighboringFacesOfFace(2));
+  MEASURE_TIME(mesh.PrintNeighboringFacesOfVertex(2)); 
 #else
   mesh.LoadOFF(fileOFF);
   mesh.PrintNeighboringFacesOfFace(2);
@@ -37,10 +37,10 @@ int main(int argc, char** argv)
 #endif
 
   std::string outputFile= "/" + filename + ".obj"; 
-  mesh.LoadOFF(fileOFF);
-  mesh.ComputeNormals();
+  MEASURE_TIME(mesh.LoadOFF(fileOFF));
+  MEASURE_TIME(mesh.ComputeNormals());
 
-  mesh.SaveOBJ(outputFile);
+  MEASURE_TIME(mesh.SaveOBJ(outputFile));
 
   Application app(outputFile);
   app.run();

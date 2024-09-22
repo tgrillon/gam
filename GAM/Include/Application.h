@@ -24,10 +24,13 @@ public:
   int render();
 
 protected:
-  Mesh m_objet;
-  Mesh m_cube;
-  Mesh m_robot;
-  Mesh m_repere;
+  Mesh m_Object;
+  Mesh m_Repere;
 
-  std::string m_objFile; 
+  unsigned int m_Program;
+
+  bool m_DrawNormals; 
+  bool m_DrawCurvature; 
+
+  std::string m_ObjFile; 
 };

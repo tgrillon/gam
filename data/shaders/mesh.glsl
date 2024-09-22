@@ -48,6 +48,7 @@ void main( )
 #ifdef USE_COLOR
     vertex_color= color;
 #endif
+
 }
 #endif
 

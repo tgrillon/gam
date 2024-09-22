@@ -74,10 +74,14 @@
     "cinttypes": "cpp",
     "typeindex": "cpp",
     "typeinfo": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "ranges": "cpp"
   }, 
   "cmake.debugConfig": {
     "args": ["queen"]
+    // "args": ["diplodocus"]
     // "args": ["sphere"]
+    // "args": ["armadillo"]
+    // "args": ["cube_maillage_triangles"]
   }
 }

@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include "uniforms.h"
+
 Mesh make_grid( const int n= 10 )
 {
   Mesh grid= Mesh(GL_LINES);
@@ -43,35 +45,104 @@ Mesh read_mesh(const std::string& filepath)
   return read_mesh(filepath.c_str());
 }
 
-Application::Application(const std::string& obj) : AppCamera(1024, 640), m_objFile(obj) {}
+GLuint read_texture(const int location, const std::string& filepath)
+{
+  return read_texture(location, filepath.c_str());
+}
+
+GLuint read_program(const std::string& filepath)
+{
+  return read_program(filepath.c_str());
+}
+
+Application::Application(const std::string& obj) : AppCamera(1024, 640), m_ObjFile(obj) {}
 
 int Application::init()
 {
-  m_repere= make_grid(10);
-  m_objet= read_mesh(std::string(DATA_DIR) + m_objFile);
+  m_Repere= make_grid(10);
+  m_Object= read_mesh(std::string(OBJ_DIR) + m_ObjFile);
   
-  glClearColor(0.2f, 0.2f, 0.2f, 1.f);       
+  glClearColor(0.1, 0.1, 0.1, 1.f); 
   
   glClearDepth(1.f);                         
   glDepthFunc(GL_LESS);                      
-  glEnable(GL_DEPTH_TEST);                   
+  glEnable(GL_DEPTH_TEST);  
+
+  Point pmin, pmax; 
+  m_Object.bounds(pmin, pmax);
+  camera().lookat(pmin, pmax);
+
+  m_DrawNormals= false; 
+  m_DrawCurvature= false; 
+
+  m_Program= read_program(std::string(SHADER_DIR) + "/gam.glsl");
+  program_print_errors(m_Program);
 
   return 0;  
 }
 
 int Application::quit()
 {
-  m_repere.release();
-  m_objet.release();
+  m_Repere.release();
+  m_Object.release();
+  release_program(m_Program);
   return 0;   // pas d'erreur
 }
 
 int Application::render()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glUseProgram(m_Program);
   
-  draw(m_repere, /* model */ Identity(), camera());
-  draw(m_objet, /* model */ Identity(), camera());
+  Transform tf= Scale(camera().radius() * 0.1);
+  // draw(m_Repere, /* model */ tf, camera());
+
+  if (key_state(SDLK_LCTRL) && key_state(SDLK_n)) 
+  {
+    clear_key_state(SDLK_n);
+    m_DrawNormals= !m_DrawNormals; 
+    m_DrawCurvature= false; 
+  }
+
+  if (key_state(SDLK_LCTRL) && key_state(SDLK_w))
+  {
+    clear_key_state(SDLK_w);
+    m_DrawCurvature= !m_DrawCurvature; 
+    m_DrawNormals= false; 
+  }
+
+  // Transform view= camera().view();
+  // Transform projection= camera().projection(window_width(), window_height(), 45);
+  // DrawParam param;
+  // param.model(Identity()).view(view).projection(projection);
+  // if (m_DrawNormals) param.debug_normals(0.02);
+  // if (m_DrawCurvature) 
+  // {
+
+  //   param.debug_texcoords();
+  // }
+  // param.draw(m_Object);
+
+  Transform model= Identity();
+  Transform view= m_camera.view();
+  Transform projection= m_camera.projection(window_width(), window_height(), 45);
+  
+  // . composer les transformations : model, view et projection
+  Transform mvp= projection * view * model;
+  Transform mv= model * view;
+  
+  // . parametrer le shader program :
+  //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+  program_uniform(m_Program, "u_MvpMatrix", mvp);
+  program_uniform(m_Program, "u_MvMatrix", mv);
+  program_uniform(m_Program, "u_NormalMatrix", mv.normal());
+
+  Point light= camera().position();
+  program_uniform(m_Program, "u_Light", view(light));
+  program_uniform(m_Program, "u_UseCurvature", m_DrawCurvature ? 1 : 0);
+
+  m_Object.draw(m_Program, true, true, true, false, false);
   
   return 1;
-}
+} 

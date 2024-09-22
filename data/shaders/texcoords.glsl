@@ -23,26 +23,25 @@ void main( )
 in vec3 vertex_position;
 in vec2 vertex_texcoord;
 
-uniform sampler2D diffuse_color;
+// uniform sampler2D diffuse_color;
 
 out vec4 fragment_color;
 
 void main( )
 {
-	vec3 color= vec3(vertex_texcoord, 0);
-	
+	vec3 color= vec3(vertex_texcoord.x);
+
 	ivec2 p=  ivec2(vertex_texcoord * 1024);
-	if(p.x % 32 < 2)
-		color= vec3(1);
-	if(p.y % 32 < 2)
-		color= vec3(1);
+	// if(p.x % 32 < 2)
+	// 	color= vec3(1);
+	// if(p.y % 32 < 2)
+	// 	color= vec3(1);
 	
 	vec3 t= dFdx(vertex_position);
 	vec3 b= dFdy(vertex_position);
 	vec3 n= normalize(cross(t, b));
 	vec3 l= normalize(- vertex_position);
 	float cos_theta= max(0, dot(n, l));
+	
 	fragment_color= vec4(color * cos_theta, 1);
 }
-
-#endif
