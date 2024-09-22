@@ -1,4 +1,5 @@
-#include "Mesh.hpp"
+#include "Mesh.h"
+#include "Application.h"
 
 #include <chrono>
 
@@ -22,7 +23,7 @@ int main(int argc, char** argv)
 {
   GAM::Mesh mesh; 
 
-  std::string fileOFF= argc > 1 ? argv[1] : "../../data/cube_maillage_triangles.off"; 
+  std::string fileOFF= argc > 1 ? argv[1] : "/cube_maillage_triangles.off"; 
 #ifdef CONNECTIVITY_TEST
 #ifdef DEBUG
   ELAPSED_TIME(mesh.LoadOFF(fileOFF));
@@ -35,11 +36,15 @@ int main(int argc, char** argv)
 #endif
 #endif
 
+  std::string outputFile= "/queen.obj"; 
   mesh.LoadOFF(fileOFF);
   // std::vector<GAM::ScalarType> U(mesh.GetNumberOfVertex());
   // U[0]= 1;
   // mesh.CalculateCotangentLaplacian(U);
   // for (const auto& [i, v] : utils::enumerate(U)) 
     // std::cout << i << ": " << v << "\n";
-  mesh.SaveAsOBJ("test.obj");
+  mesh.SaveOBJ(outputFile);
+
+  Application app(outputFile);
+  app.run();
 }

@@ -1,4 +1,4 @@
-#include "Mesh.hpp"
+#include "Mesh.h"
 
 #define DEBUG
 
@@ -6,7 +6,7 @@ namespace GAM
 {
   void GAM::Mesh::LoadOFF(const std::string &OFFFile)
   {
-    std::ifstream file(OFFFile);
+    std::ifstream file(std::string(DATA_DIR) + OFFFile);
 
     // Checking if we can read the file 
     if (!file.is_open())
@@ -109,26 +109,25 @@ namespace GAM
 
   void Mesh::SaveOBJ(const std::string &OBJFile)
   {
-    std::ofstream file(OBJFile);
+    std::ofstream file(std::string(DATA_DIR) + OBJFile);
     file << "OFF" << "\n";
     file << GetNumberOfVertex() << " " << GetNumberOfFace() << " " << 0 << "\n";
     
     // Save vertices position
     for (const auto& v : m_Vertices)
     {
-      file << "v " << v.X << " " << v.Y << " " << v.Z << "\n";  
+      file << std::fixed << std::setprecision(1) << "v " << v.X << " " << v.Y << " " << v.Z << "\n";  
     }
 
     // Save topology
     for (const auto& f : m_Faces)
     {
-      file << "f ";
-      file << f.Vertices[0] << " ";  
-      file << f.Vertices[1] << " ";  
-      file << f.Vertices[2] << "\n";
+      file << "f " << f.Vertices[0] + 1 << " " << f.Vertices[1] + 1 << " " << f.Vertices[2] + 1 << "\n";
     }
 
     file.close();
+
+    std::cout << "File " << OBJFile << " successfully saved!" << std::endl;
   }
 
   IndexType Mesh::GetVertexLocalIndex(IndexType iVertex, IndexType iFace) const
