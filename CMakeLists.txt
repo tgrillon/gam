@@ -5,7 +5,7 @@ project(GAM)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(GKIT_DIR "/home/friska/dev/cxx/gkit2light" CACHE PATH "Path to gkit source files")
+set(GKIT_DIR "/home/tgrillon/dev/cxx/gkit2light" CACHE PATH "Path to gkit source files")
 message(STATUS "Gkit directory set to: ${GKIT_DIR}")
 set(DATA_DIR "${CMAKE_SOURCE_DIR}/data" CACHE PATH "Path to the data directory")
 message(STATUS "Data directory set to: ${DATA_DIR}")

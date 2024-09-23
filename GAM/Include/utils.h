@@ -36,4 +36,24 @@ auto enumerate(const auto& data) {
     return std::make_pair(i++, value);
   });
 }
+
+template<typename ...Args>
+void log(Args && ...args)
+{
+  (std::cout << ... << args);
+}
+
+template<typename ...Args>
+void logln(Args && ...args)
+{
+  (std::cout << ... << args);
+  std::cout << '\n';
+}
+
+template<typename ...Args>
+void error(Args && ...args)
+{
+  (std::cerr << ... << args);
+  std::cout << std::endl;
+}
 } // namespace utils

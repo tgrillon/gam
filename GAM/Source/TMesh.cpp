@@ -9,7 +9,7 @@ void GAM::TMesh::LoadOFF(const std::string &OFFFile)
   // Checking if we can read the file 
   if (!file.is_open())
   {
-    std::cerr << "Couldn't open this file: " << OFFFile << "\n";
+    utils::error("Couldn't open this file: ", OFFFile);
     exit(1);
   }
   // Checking file type 
@@ -17,7 +17,7 @@ void GAM::TMesh::LoadOFF(const std::string &OFFFile)
   file >> type; 
   if (type!="OFF")
   {
-    std::cerr << "The format of the provided file must be OFF: " << OFFFile << "\n";
+    utils::error("The format of the provided file must be OFF: ", OFFFile);
     exit(1);
   }
   // Retrieving number of vertices / faces 
@@ -93,7 +93,7 @@ void GAM::TMesh::LoadOFF(const std::string &OFFFile)
   }
 #ifdef DEBUG
   IntegrityCheck();
-  std::cout << "TMesh successfully loaded!\n";
+  utils::logln("TMesh successfully loaded!");
 #endif
   file.close();
 }
@@ -128,7 +128,7 @@ void TMesh::SaveOBJ(const std::string &OBJFile)
     file << (f.Vertices[2] + 1) << "/" << (f.Vertices[0] + 1) << "/" << (f.Vertices[2] + 1) <<  "\n";
   }
   file.close();
-  std::cout << "File " << OBJFile << " successfully saved!" << std::endl;
+  utils::logln("File ", OBJFile, " successfully saved!");
 }
 
 IndexType TMesh::GetVertexLocalIndex(IndexType iVertex, IndexType iFace) const
@@ -144,10 +144,10 @@ void TMesh::PrintNeighboringFacesOfFace(IndexType iFace) const
 {
   assert(iFace<m_Faces.size());
   int i= 0; 
-  std::cout << "--Neighboring faces of face " << iFace << "--\n";
+  utils::logln("--Neighboring faces of face ", iFace, "--");
   for (auto face : m_Faces[iFace].Neighbors)
   {
-    std::cout << "Neighboring face " << i++ << ": " << face << "\n";
+    utils::logln("Neighboring face ", i++, ": ", face);
   }
   std::cout << std::endl;
 }
@@ -156,14 +156,14 @@ void TMesh::PrintNeighboringFacesOfVertex(IndexType iVertex) const
 {
   assert(iVertex<m_Vertices.size());
   auto& faceStartIndex= m_Vertices[iVertex].FaceIndex; 
-  std::cout << "--Neighboring faces of vertex " << iVertex << "--\n";
+  utils::logln("--Neighboring faces of vertex ", iVertex, "--");
   int i= 0; 
-  std::cout << "Neighboring face " << i++ << ": " << faceStartIndex << "\n";
+  utils::logln("Neighboring face ", i++, ": ", faceStartIndex);
   IndexType localVertexIndex= GetVertexLocalIndex(iVertex, faceStartIndex);
   IndexType currentFaceIndex= m_Faces[faceStartIndex].Neighbors[(localVertexIndex+1)%3];
   while (currentFaceIndex!=faceStartIndex)
   {
-    std::cout << "Neighboring face " << i++ << ": " << currentFaceIndex << "\n";
+    utils::logln("Neighboring face ", i++, ": ", currentFaceIndex);
     localVertexIndex= GetVertexLocalIndex(iVertex, currentFaceIndex);
     currentFaceIndex= m_Faces[currentFaceIndex].Neighbors[(localVertexIndex+1)%3];
   } 
@@ -257,8 +257,8 @@ void TMesh::CotangentLaplacian()
 
 void TMesh::ComputeNormals()
 {
-  ScalarType maxCurv= std::numeric_limits<ScalarType>::min();
-  ScalarType minCurv= std::numeric_limits<ScalarType>::max();
+  m_MaxCurv= std::numeric_limits<ScalarType>::min();
+  m_MinCurv= std::numeric_limits<ScalarType>::max();
 
   assert(m_Normals.size() == m_Vertices.size());
   for (IndexType i= 1; i < m_Vertices.size(); ++i)
@@ -274,8 +274,8 @@ void TMesh::ComputeNormals()
     Vector faceNormal= u.Cross(v);
 
     m_Values[i]= vertexNormal.Norm();
-    maxCurv= std::max(maxCurv, m_Values[i]);
-    minCurv= std::min(minCurv, m_Values[i]);
+    m_MaxCurv= std::max(m_MaxCurv, m_Values[i]);
+    m_MinCurv= std::min(m_MinCurv, m_Values[i]);
     if (faceNormal.Dot(vertexNormal) < 0) 
     {
       vertexNormal= -vertexNormal; 
@@ -283,11 +283,33 @@ void TMesh::ComputeNormals()
 
     m_Normals[i]= vertexNormal; 
   }
+}
 
+void TMesh::ComputeCurvature()
+{
   for (IndexType i= 1; i < m_Vertices.size(); ++i) 
   {
-    m_Values[i]= (m_Values[i] - minCurv) / (maxCurv - minCurv);
+    m_Values[i]= (m_Values[i] - m_MinCurv) / (m_MaxCurv - m_MinCurv);
   }
+}
+
+void TMesh::HeatDiffusion(IndexType iVertex, ScalarType value)
+{
+  assert(iVertex < m_Vertices.size());
+
+  m_Values[iVertex]= value;
+  for (int i= 0; i < m_Vertices.size(); ++i)
+  {
+    if (i == iVertex) continue;
+
+    m_Values[i]+= CotangentLaplacian(i);
+  }
+
+  // auto neighbors= GetNeighboringVerticesOfVertex(iVertex);
+  // for (auto in : neighbors)
+  // {
+  //   utils::logln("Vertex value (", in, "): ", m_Values[in]);
+  // }
 }
 
 ScalarType TMesh::CotangentLaplacian(IndexType iVertex)

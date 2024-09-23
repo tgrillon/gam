@@ -55,7 +55,8 @@ GLuint read_program(const std::string& filepath)
   return read_program(filepath.c_str());
 }
 
-Application::Application(const std::string& obj) : AppCamera(1024, 640), m_ObjFile(obj) {}
+Application::Application(const std::string& obj) : AppCamera(1024, 640), m_ObjFile(obj) {
+}
 
 int Application::init()
 {
@@ -74,6 +75,9 @@ int Application::init()
 
   m_DrawNormals= false; 
   m_DrawCurvature= false; 
+  m_DrawHeatDiffusion= false; 
+
+  m_HeatDiffusionTex= read_texture(0, std::string(DATA_DIR) + "/gradient.jpg");
 
   m_Program= read_program(std::string(SHADER_DIR) + "/gam.glsl");
   program_print_errors(m_Program);
@@ -85,6 +89,7 @@ int Application::quit()
 {
   m_Repere.release();
   m_Object.release();
+  glDeleteTextures(1, &m_HeatDiffusionTex);
   release_program(m_Program);
   return 0;   // pas d'erreur
 }
@@ -114,8 +119,6 @@ int Application::render()
 
   // Transform view= camera().view();
   // Transform projection= camera().projection(window_width(), window_height(), 45);
-  // DrawParam param;
-  // param.model(Identity()).view(view).projection(projection);
   // if (m_DrawNormals) param.debug_normals(0.02);
   // if (m_DrawCurvature) 
   // {
@@ -140,9 +143,26 @@ int Application::render()
 
   Point light= camera().position();
   program_uniform(m_Program, "u_Light", view(light));
-  program_uniform(m_Program, "u_UseCurvature", m_DrawCurvature ? 1 : 0);
+  program_uniform(m_Program, "u_DrawCurvature", m_DrawCurvature ? 1 : 0);
 
-  m_Object.draw(m_Program, true, true, true, false, false);
+
+  if (m_DrawNormals)
+  {
+    DrawParam param;
+    param.model(Identity()).view(view).projection(projection);
+    param.debug_normals(0.02);
+    param.draw(m_Object);
+  }
+  if (m_DrawHeatDiffusion)
+  {
+    program_use_texture(m_Program, "u_HeatDiffusionTex", 0, m_HeatDiffusionTex);
+    program_uniform(m_Program, "u_DrawHeatDiffusion", m_DrawHeatDiffusion ? 1 : 0);
+    m_Object.draw(m_Program, true, true, true, false, false);
+  }
+  else 
+  {
+    m_Object.draw(m_Program, true, true, true, false, false);
+  }
   
   return 1;
 } 

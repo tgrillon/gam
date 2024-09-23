@@ -76,6 +76,10 @@ public:
   /// @brief Compute normal of each vertex of the mesh. 
   void ComputeNormals();
 
+  void ComputeCurvature();
+
+  void HeatDiffusion(IndexType iVertex, ScalarType value);
+
 private: 
   /// @brief Calculate cotangente Laplacian value at vertex of index iVertex.
   /// @param iVertex index of the vertex.
@@ -103,5 +107,8 @@ private:
   std::vector<ScalarType> m_Values;
 
   BoundingBox m_Bbox;
+
+  ScalarType m_MinCurv; 
+  ScalarType m_MaxCurv; 
 };
 } // namespace GAM

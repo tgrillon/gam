@@ -27,10 +27,12 @@ protected:
   Mesh m_Object;
   Mesh m_Repere;
 
-  unsigned int m_Program;
+  uint32_t m_Program;
+  uint32_t m_HeatDiffusionTex;
 
   bool m_DrawNormals; 
   bool m_DrawCurvature; 
+  bool m_DrawHeatDiffusion;
 
   std::string m_ObjFile; 
 };

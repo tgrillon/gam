@@ -35,14 +35,21 @@ out vec4 out_color;
 uniform vec3 u_Light;
 uniform vec4 u_LightColor= vec4(1, 1, 1, 1);
 uniform vec4 u_MeshColor= vec4(1, 1, 1, 1);
-uniform bool u_UseCurvature; 
+uniform bool u_DrawCurvature; 
+uniform bool u_DrawHeatDiffusion; 
 
-void main( )
+uniform sampler2D u_HeatDiffusionTex;
+
+void main()
 {
   vec4 color= u_MeshColor;
-  if (u_UseCurvature)
+  if (u_DrawCurvature)
   {
     color= vec4(vTexcoord.xxx, 1.0);
+  }
+  else if (u_DrawHeatDiffusion)
+  {
+    color= texture(u_HeatDiffusionTex, vec2(vTexcoord.x, 0.0));
   }
 
   vec3 normal= normalize(vNormal);

@@ -75,7 +75,8 @@
     "typeindex": "cpp",
     "typeinfo": "cpp",
     "variant": "cpp",
-    "ranges": "cpp"
+    "ranges": "cpp",
+    "future": "cpp"
   }, 
   "cmake.debugConfig": {
     "args": ["queen"]
