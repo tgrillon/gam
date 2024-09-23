@@ -9,6 +9,7 @@ layout(location= 2) in vec3 a_Normal;
 out vec3 vPosition;
 out vec2 vTexcoord;
 out vec3 vNormal;
+out vec4 vColor;
 
 uniform mat4 u_MvpMatrix;
 uniform mat4 u_MvMatrix;
@@ -20,6 +21,7 @@ void main()
 
   vTexcoord= a_Texcoord;
   vNormal= mat3(u_NormalMatrix) * a_Normal;
+  vColor= vec4(normalize(mat3(u_NormalMatrix) * a_Normal), 1.0);
   vPosition= vec3(u_MvMatrix * vec4(a_Position, 1));
 }
 #endif
@@ -29,6 +31,7 @@ void main()
 in vec3 vPosition;
 in vec2 vTexcoord;
 in vec3 vNormal;
+in vec4 vColor;
 
 out vec4 out_color;
 
@@ -36,23 +39,42 @@ uniform vec3 u_Light;
 uniform vec4 u_LightColor= vec4(1, 1, 1, 1);
 uniform vec4 u_MeshColor= vec4(1, 1, 1, 1);
 uniform bool u_DrawCurvature; 
+uniform bool u_DrawNormalColor; 
 uniform bool u_DrawHeatDiffusion; 
+uniform bool u_DrawSmoothNormal; 
 
 uniform sampler2D u_HeatDiffusionTex;
 
 void main()
 {
   vec4 color= u_MeshColor;
+  if (u_DrawNormalColor)
+  {
+    color= vColor;
+  }
+
   if (u_DrawCurvature)
   {
-    color= vec4(vTexcoord.xxx, 1.0);
+    float s= 4;
+    vec3 curv= vec3(vTexcoord.x*s*2, vTexcoord.x*s, vTexcoord.x*s*4);
+    color= vec4(curv, 1.0);
   }
   else if (u_DrawHeatDiffusion)
   {
-    color= texture(u_HeatDiffusionTex, vec2(vTexcoord.x, 0.0));
+    color= texture(u_HeatDiffusionTex, vec2(0.0, vTexcoord.x));
   }
 
-  vec3 normal= normalize(vNormal);
+  vec3 normal;
+  if (u_DrawSmoothNormal)
+  {
+    normal= normalize(vNormal);
+  }
+  else 
+  {
+    vec3 t= normalize(dFdx(vPosition));
+    vec3 b= normalize(dFdy(vPosition));
+    normal= normalize(cross(t, b));
+  }
 
   float cos_theta= max(0, dot(normal, normalize(u_Light - vPosition)));         
   color= color * u_LightColor;

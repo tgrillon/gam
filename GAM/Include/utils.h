@@ -10,6 +10,7 @@
 #include <cmath>
 #include <ranges>
 #include <iomanip>
+#include <algorithm>
 
 namespace GAM
 {

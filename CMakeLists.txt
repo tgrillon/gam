@@ -16,7 +16,6 @@ message(STATUS "Obj files directory set to: ${OBJ_DIR}")
 set(SHADER_DIR "${DATA_DIR}/shaders" CACHE PATH "Path to the shader files")
 message(STATUS "Shader files directory set to: ${SHADER_DIR}")
 
-
 file(GLOB gkit_files "${GKIT_DIR}/src/gKit/*.cpp")
 add_library(gkit STATIC ${gkit_files})
 target_include_directories(gkit PUBLIC "${GKIT_DIR}")

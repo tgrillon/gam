@@ -1,45 +1,5 @@
 #include "Application.h"
 
-#include "uniforms.h"
-
-Mesh make_grid( const int n= 10 )
-{
-  Mesh grid= Mesh(GL_LINES);
-  
-  // grille
-  grid.color(White());
-  for(int x= 0; x < n; x++)
-  {
-    float px= float(x) - float(n)/2 + .5f;
-    grid.vertex(Point(px, 0, - float(n)/2 + .5f)); 
-    grid.vertex(Point(px, 0, float(n)/2 - .5f));
-  }
-
-  for(int z= 0; z < n; z++)
-  {
-    float pz= float(z) - float(n)/2 + .5f;
-    grid.vertex(Point(- float(n)/2 + .5f, 0, pz)); 
-    grid.vertex(Point(float(n)/2 - .5f, 0, pz)); 
-  }
-  
-  // axes XYZ
-  grid.color(Red());
-  grid.vertex(Point(0, .1, 0));
-  grid.vertex(Point(1, .1, 0));
-  
-  grid.color(Green());
-  grid.vertex(Point(0, .1, 0));
-  grid.vertex(Point(0, 1, 0));
-  
-  grid.color(Blue());
-  grid.vertex(Point(0, .1, 0));
-  grid.vertex(Point(0, .1, 1));
-  
-  glLineWidth(2);
-  
-  return grid;
-}
-
 Mesh read_mesh(const std::string& filepath)
 {
   return read_mesh(filepath.c_str());
@@ -60,7 +20,6 @@ Application::Application(const std::string& obj) : AppCamera(1024, 640), m_ObjFi
 
 int Application::init()
 {
-  m_Repere= make_grid(10);
   m_Object= read_mesh(std::string(OBJ_DIR) + m_ObjFile);
   
   glClearColor(0.1, 0.1, 0.1, 1.f); 
@@ -76,8 +35,10 @@ int Application::init()
   m_DrawNormals= false; 
   m_DrawCurvature= false; 
   m_DrawHeatDiffusion= false; 
+  m_DrawNormalColor= false; 
+  m_DrawSmoothNormal= false; 
 
-  m_HeatDiffusionTex= read_texture(0, std::string(DATA_DIR) + "/gradient.jpg");
+  m_HeatDiffusionTex= read_texture(0, std::string(DATA_DIR) + "/gradient.png");
 
   m_Program= read_program(std::string(SHADER_DIR) + "/gam.glsl");
   program_print_errors(m_Program);
@@ -101,31 +62,36 @@ int Application::render()
   glUseProgram(m_Program);
   
   Transform tf= Scale(camera().radius() * 0.1);
-  // draw(m_Repere, /* model */ tf, camera());
 
-  if (key_state(SDLK_LCTRL) && key_state(SDLK_n)) 
+  if (key_state(SDLK_n)) 
   {
     clear_key_state(SDLK_n);
     m_DrawNormals= !m_DrawNormals; 
-    m_DrawCurvature= false; 
   }
 
-  if (key_state(SDLK_LCTRL) && key_state(SDLK_w))
+  if (key_state(SDLK_k)) 
+  {
+    clear_key_state(SDLK_k);
+    m_DrawSmoothNormal= !m_DrawSmoothNormal; 
+  }
+
+  if (key_state(SDLK_m))
+  {
+    clear_key_state(SDLK_m);
+    m_DrawNormalColor= !m_DrawNormalColor;
+  } 
+
+  if (key_state(SDLK_w))
   {
     clear_key_state(SDLK_w);
     m_DrawCurvature= !m_DrawCurvature; 
-    m_DrawNormals= false; 
   }
 
-  // Transform view= camera().view();
-  // Transform projection= camera().projection(window_width(), window_height(), 45);
-  // if (m_DrawNormals) param.debug_normals(0.02);
-  // if (m_DrawCurvature) 
-  // {
-
-  //   param.debug_texcoords();
-  // }
-  // param.draw(m_Object);
+  if (key_state(SDLK_h))
+  {
+    clear_key_state(SDLK_h);
+    m_DrawHeatDiffusion= !m_DrawHeatDiffusion; 
+  }
 
   Transform model= Identity();
   Transform view= m_camera.view();
@@ -144,25 +110,26 @@ int Application::render()
   Point light= camera().position();
   program_uniform(m_Program, "u_Light", view(light));
   program_uniform(m_Program, "u_DrawCurvature", m_DrawCurvature ? 1 : 0);
-
+  program_uniform(m_Program, "u_DrawHeatDiffusion", m_DrawHeatDiffusion ? 1 : 0);
+  program_uniform(m_Program, "u_DrawNormalColor", m_DrawNormalColor ? 1 : 0);
+  program_uniform(m_Program, "u_DrawSmoothNormal", m_DrawSmoothNormal ? 1 : 0);
 
   if (m_DrawNormals)
   {
     DrawParam param;
     param.model(Identity()).view(view).projection(projection);
-    param.debug_normals(0.02);
+    param.debug_normals(0.02*camera().radius());
     param.draw(m_Object);
   }
-  if (m_DrawHeatDiffusion)
+  else if (m_DrawHeatDiffusion)
   {
     program_use_texture(m_Program, "u_HeatDiffusionTex", 0, m_HeatDiffusionTex);
-    program_uniform(m_Program, "u_DrawHeatDiffusion", m_DrawHeatDiffusion ? 1 : 0);
     m_Object.draw(m_Program, true, true, true, false, false);
   }
   else 
   {
     m_Object.draw(m_Program, true, true, true, false, false);
   }
-  
+
   return 1;
 } 

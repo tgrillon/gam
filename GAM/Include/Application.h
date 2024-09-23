@@ -8,6 +8,10 @@
 #include "orbiter.h"
 #include "draw.h"        
 #include "app_camera.h"      
+#include "uniforms.h"
+
+#include "utils.h"
+#include "TMesh.h"
 
 class Application : public AppCamera
 {
@@ -27,12 +31,14 @@ protected:
   Mesh m_Object;
   Mesh m_Repere;
 
-  uint32_t m_Program;
-  uint32_t m_HeatDiffusionTex;
+  GLuint m_Program;
+  GLuint m_HeatDiffusionTex;
 
   bool m_DrawNormals; 
   bool m_DrawCurvature; 
   bool m_DrawHeatDiffusion;
+  bool m_DrawNormalColor;
+  bool m_DrawSmoothNormal;
 
   std::string m_ObjFile; 
 };

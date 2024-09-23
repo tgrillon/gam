@@ -80,6 +80,9 @@
   }, 
   "cmake.debugConfig": {
     "args": ["queen"]
+    // "args": ["refined_elephant"]
+    // "args": ["cow"]
+    // "args": ["bones"]
     // "args": ["diplodocus"]
     // "args": ["sphere"]
     // "args": ["armadillo"]

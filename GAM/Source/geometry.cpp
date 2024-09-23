@@ -85,12 +85,12 @@ Point::Point() : X(0.), Y(0.), Z(0.) {}
 
 Point::Point(ScalarType x, ScalarType y, ScalarType z) : X(x), Y(y), Z(z) {}
 
-Point Point::Min(const Point &a, const Point &b)
+Point Point::pmin(const Point &a, const Point &b)
 {
   return Point(std::min(a.X, b.X), std::min(a.Y, b.Y), std::min(a.Z, b.Z));
 }
 
-Point Point::Max(const Point &a, const Point &b)
+Point Point::pmax(const Point &a, const Point &b)
 {
   return Point(std::max(a.X, b.X), std::max(a.Y, b.Y), std::max(a.Z, b.Z));
 }
@@ -165,9 +165,5 @@ Point operator/=(const Point &a, const Point &b)
 {
   return a / b;
 }
-
-BoundingBox::BoundingBox() : m_Pmin(1000., 1000., 1000.), m_Pmax(-1000., -1000., -1000.) {}
-
-BoundingBox::BoundingBox(const Point &min, const Point &max) : m_Pmin(min), m_Pmax(max) {}
 
 } // namespace GAM
