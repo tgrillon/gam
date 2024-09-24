@@ -27,9 +27,13 @@ public:
   // dessiner une nouvelle image
   int render();
 
+  inline void tmesh(const GAM::TMesh& mesh) { m_Mesh= mesh; }
+
 protected:
   Mesh m_Object;
   Mesh m_Repere;
+
+  GAM::TMesh m_Mesh;
 
   GLuint m_Program;
   GLuint m_HeatDiffusionTex;

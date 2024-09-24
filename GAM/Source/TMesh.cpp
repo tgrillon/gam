@@ -26,6 +26,7 @@ void GAM::TMesh::load_off(const std::string &OFFFile)
   m_Vertices.resize(nVertices);
   m_Faces.resize(nFaces);
   m_Values.resize(nVertices, 0.);
+  m_Curvature.resize(nVertices, 0.);
   m_Normals.resize(nVertices, Vector::unit_z());
 
   Point pmin, pmax; 
@@ -94,7 +95,7 @@ void GAM::TMesh::load_off(const std::string &OFFFile)
 #endif
   file.close();
 }
-void TMesh::save_obj(const std::string &OBJFile)
+void TMesh::save_obj(const std::string &OBJFile, bool useCurvature)
 {
   std::ofstream file(std::string(OBJ_DIR) + OBJFile);
   file << "OBJ" << "\n";
@@ -107,7 +108,8 @@ void TMesh::save_obj(const std::string &OBJFile)
     file << "v " << v.X << " " << v.Y << " " << v.Z << "\n";  
   }
   // Save textcoords
-  for (const auto& v : m_Values)
+  auto& data= useCurvature ? m_Curvature : m_Values;
+  for (const auto& v : data)
   {
     file << "vt " << v << " " << v << "\n";  
   }
@@ -289,29 +291,28 @@ void TMesh::smooth_normals()
     {
       vertexNormal= -vertexNormal; 
     }
-    m_Values[i]= vertexNormal.norm();
+   
+    m_Curvature[i]= vertexNormal.norm();
     m_Normals[i]= vertexNormal; 
   }
 }
 
 void TMesh::curvature()
 {
-  ScalarType maxCurv= *std::max_element(m_Values.begin(), m_Values.end()); 
+  ScalarType maxCurv= *std::max_element(m_Curvature.begin(), m_Curvature.end()); 
+
+  assert(maxCurv > 0 || maxCurv < 0);
+
   for (IndexType i= 0; i < m_Vertices.size(); ++i) 
   {
-    m_Values[i]/= maxCurv;
+    m_Curvature[i]= m_Curvature[i] / maxCurv;
   }
 }
 
-void TMesh::heat_diffusion(ScalarType deltaTime, IndexType iVertex0, IndexType iVertex1)
+void TMesh::heat_diffusion(ScalarType deltaTime)
 {
-  assert(iVertex0 < number_of_vertices());
-  assert(iVertex1 < number_of_vertices());
-
-  for (int i= 0; i < number_of_vertices(); ++i)
+  for (int i= 1; i < number_of_vertices(); ++i)
   {
-    if (i == iVertex0 || i == iVertex1) continue; 
-    
     heat_diffusion(i, deltaTime);
   }
 }
@@ -341,10 +342,10 @@ ScalarType TMesh::laplacian(IndexType iVertex)
     // Cotangente 
     Vector v(m_Vertices[prevJVertex], m_Vertices[jVertex]); 
     Vector w(m_Vertices[prevJVertex], m_Vertices[iVertex]);
-    ScalarType cotAlpha= abs(v.cotan(w)); 
+    ScalarType cotAlpha= v.cotan(w); 
     v= Vector(m_Vertices[nextJVertex], m_Vertices[iVertex]);
     w= Vector(m_Vertices[nextJVertex], m_Vertices[jVertex]);
-    ScalarType cotBeta= abs(v.cotan(w)); 
+    ScalarType cotBeta= v.cotan(w); 
     ScalarType& ui= m_Values[iVertex];
     ScalarType& uj= m_Values[jVertex]; 
     

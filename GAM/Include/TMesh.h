@@ -11,104 +11,98 @@ public:
   TMesh()=default; 
   TMesh(const std::vector<ScalarType>& values) : m_Values(values) {} 
 
-  inline void vertex_value(IndexType iVertex, ScalarType v) { m_Values[iVertex]= v; }
-  inline void vertices_values(const std::vector<ScalarType>& values) { m_Values= values; }
-  inline ScalarType vertex_value(IndexType iVertex) const { return m_Values[iVertex]; }
-  inline std::vector<ScalarType> vertices_values(const std::vector<ScalarType>& values) const { return m_Values; }
+  //! Set the vertex value at index i.
+  inline void vertex_value(IndexType iVertex, ScalarType v) { assert(iVertex < number_of_vertices()); m_Values[iVertex]= v; }
 
-  /// @brief Get the number of vertex of the mesh. 
-  /// @return the number of vertex.
+  //! Set the values of all vertices.
+  inline void vertices_values(const std::vector<ScalarType>& values) { m_Values= values; }
+
+  //! Set vertices values to 0.
+  inline void reset_values() { m_Values= std::vector<ScalarType>(number_of_vertices(), 0.); }
+
+  //! Get the vertex value at index i.
+  inline ScalarType vertex_value(IndexType iVertex) const { assert(iVertex < number_of_vertices()); return m_Values[iVertex]; }
+
+  //! Get the values of all vertices.
+  inline std::vector<ScalarType> vertices_values() const { return m_Values; }
+
+  //! Get the number of vertex of the mesh. 
   inline IndexType number_of_vertices() const { return m_Vertices.size(); }
   
-  /// @brief Get the number of face of the mesh.
-  /// @return the number of face.
+  //! Get the number of face of the mesh.
   inline IndexType  number_of_faces() const { return m_Faces.size(); }
 
-  /// @brief Load and triangulate a mesh from an OFF file. 
-  /// @param OFFFile the path of an .off file. 
+  //! Load and triangulate a mesh from an OFF file. 
   void load_off(const std::string& OFFFile);
 
-  /// @brief Save the mesh as an .obj file. 
-  /// @param OBJFile name of the .obj file.  
-  void save_obj(const std::string& OBJFile);
+  //! Save the mesh as an .obj file. 
+  void save_obj(const std::string& OBJFile, bool useCurvature= false);
 
-  /// @brief Get the local index for a vertex located on the face of index `iFace`.
-  /// @param iVertex index of the vertex.
-  /// @param iFace index of the face.
-  /// @return the local index.
+  //! Get the local index for a vertex located on the face of index `iFace`.
   IndexType local_index(IndexType iVertex, IndexType iFace) const;  
   
-  /// @brief Print the index of the neighboring faces of the face of index `iFace`. 
-  /// @param iFace index of the face.
+  //! Print the index of the neighboring faces of the face of index `iFace`. 
   void print_neighboring_faces_of_face(IndexType iFace) const;
 
-  /// @brief Print the index of the neighboring faces of the vertex of index `iVertex`. 
-  /// @param iVertex index of the vertex.
+  //! Print the index of the neighboring faces of the vertex of index `iVertex`. 
   void print_neighboring_faces_of_vertex(IndexType iVertex) const;
 
-  /// @brief Get the index of the neighboring faces of a face.
-  /// @param iFace index of the face.  
-  /// @return a vector of indices.
+  //! Get the index of the neighboring faces of a face.
   std::vector<IndexType> neighboring_faces_of_face(IndexType iFace) const;
 
-  /// @brief Get the index of the neighboring faces of a vertex.
-  /// @param iVertex index of the vertex.
-  /// @return a vector of indices.
+  //! Get the index of the neighboring faces of a vertex.
   std::vector<IndexType> neighboring_faces_of_vertex(IndexType iVertex) const;
 
-  /// @brief Get the index of the neighboring vertices of a vertex.
-  /// @param iVertex index of the vertex.
-  /// @return a vector of indices.
+  //! Get the index of the neighboring vertices of a vertex.
   std::vector<IndexType> neighboring_vertices_of_vertex(IndexType iVertex) const;
 
-  /// @brief Calculate the area of the face of index iFace.
-  /// @param iFace index of the face.
-  /// @return a scalar corresponding to the area of the face.
+  //! Calculate the area of the face of index iFace.
   ScalarType face_area(IndexType iFace) const;
 
-  /// @brief Calculate the area of the patch of surface corresponding to the vertex of index iVertex.
-  /// @param iVertex index of the vertex. 
-  /// @return a scalar corresponding to the area of the patch.
+  //! Calculate the area of the patch of surface corresponding to the vertex of index iVertex.
   ScalarType patch_area(IndexType iVertex) const;
 
-  /// @brief Calculate the Laplacian of a discrete function defined on the mesh.
-  /// @return An array of Laplacian values for each vertex.  
+  //! Calculate the Laplacian of a discrete function defined on the mesh.
   void laplacian();
 
   Vector face_normal(IndexType iFace) const;
 
-  /// @brief Compute normal of each vertex of the mesh. 
+  //! Compute normal of each vertex of the mesh. 
   void smooth_normals();
 
+  //! Compute curvature value at each vertex. 
   void curvature();
 
-  void heat_diffusion(ScalarType deltaTime, IndexType iVertex0, IndexType iVertex1);
+  //! Perform heat diffusion using the Laplacian equation. 
+  void heat_diffusion(ScalarType deltaTime);
+
+  //! Calculate the vertex value for the heat diffusion. 
   void heat_diffusion(IndexType iVertex, ScalarType deltaTime);
 
 private: 
-  /// @brief Calculate cotangente Laplacian value at vertex of index iVertex.
-  /// @param iVertex index of the vertex.
+  //! Calculate cotangente Laplacian value at vertex of index iVertex.
   ScalarType laplacian(IndexType iVertex);
 
-  /// @brief Calculate the normal of a vertex using the cotangent Laplacian. 
-  /// @param iVertex index of the vertex.
-  /// @return the normal of the vertex.
+  //! Calculate the normal of a vertex using the cotangent Laplacian. 
   Vector laplacian_vector(IndexType iVertex);
 
-  /// @brief Checking the integrity of the mesh structure.
+  //! Checking the integrity of the mesh structure.
   void integrity_check() const; 
 
 private: 
-  /// @brief Vertices of the mesh.
+  //! Vertices of the mesh.
   std::vector<Vertex> m_Vertices;
 
-  /// @brief Sewn-together faces of the mesh. 
+  //! Sewn-together faces of the mesh. 
   std::vector<Face> m_Faces;
 
-  /// @brief Vertices normales (must be of the same size as m_Vertices).
+  //! Vertices normales (must be of the same size as m_Vertices).
   std::vector<Vector> m_Normals;
 
-  /// @brief Vertices values (must be of the same size as m_Vertices). 
+  //! Vertices values (must be of the same size as m_Vertices). 
   std::vector<ScalarType> m_Values;
+
+  //! Vertices curavture (must be of the same size as m_Vertices). 
+  std::vector<ScalarType> m_Curvature;
 };
 } // namespace GAM

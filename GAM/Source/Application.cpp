@@ -84,12 +84,26 @@ int Application::render()
   if (key_state(SDLK_w))
   {
     clear_key_state(SDLK_w);
+    if (m_DrawHeatDiffusion)
+    {
+      m_Mesh.curvature();
+      m_Mesh.save_obj(m_ObjFile, true);
+      m_Object= read_mesh(std::string(OBJ_DIR) + m_ObjFile);
+      m_DrawHeatDiffusion= false; 
+    }
     m_DrawCurvature= !m_DrawCurvature; 
   }
 
   if (key_state(SDLK_h))
   {
     clear_key_state(SDLK_h);
+    if (m_DrawCurvature)
+    {
+      m_Mesh.reset_values();
+      m_Mesh.save_obj(m_ObjFile);
+      m_Object= read_mesh(std::string(OBJ_DIR) + m_ObjFile);
+      m_DrawCurvature= false; 
+    }
     m_DrawHeatDiffusion= !m_DrawHeatDiffusion; 
   }
 
@@ -123,6 +137,9 @@ int Application::render()
   }
   else if (m_DrawHeatDiffusion)
   {
+    m_Mesh.heat_diffusion(0.00001);
+    m_Mesh.save_obj(m_ObjFile);
+    m_Object= read_mesh(std::string(OBJ_DIR) + m_ObjFile);
     program_use_texture(m_Program, "u_HeatDiffusionTex", 0, m_HeatDiffusionTex);
     m_Object.draw(m_Program, true, true, true, false, false);
   }
