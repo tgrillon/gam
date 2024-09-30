@@ -166,4 +166,16 @@ Point operator/=(const Point &a, const Point &b)
   return a / b;
 }
 
+ScalarType Vector::cotan(const Vector &V) const
+{
+  ScalarType sinTheta= (this->cross(V)).norm();
+  if (sinTheta > 0. || sinTheta < 0.)
+  {
+    ScalarType cosTheta= this->dot(V); 
+    return cosTheta/sinTheta; 
+  }
+
+  return 0.;
+}
+
 } // namespace GAM

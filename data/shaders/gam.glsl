@@ -55,13 +55,13 @@ void main()
 
   if (u_DrawCurvature)
   {
-    float s= 4;
+    float s= 1;
     vec3 curv= vec3(vTexcoord.x*s*2, vTexcoord.x*s, vTexcoord.x*s*4);
     color= vec4(curv, 1.0);
   }
   else if (u_DrawHeatDiffusion)
   {
-    color= texture(u_HeatDiffusionTex, vec2(0.0, vTexcoord.x));
+    color= texture(u_HeatDiffusionTex, vec2(vTexcoord.x/100, 0.0));
   }
 
   vec3 normal;

@@ -23,10 +23,11 @@ void GAM::TMesh::load_off(const std::string &OFFFile)
   // Retrieving number of vertices / faces 
   IndexType nVertices, nFaces, nEdges;
   file >> nVertices >> nFaces >> nEdges; 
-  m_vertices.resize(nVertices);
-  m_faces.resize(nFaces);
-  m_values.resize(nVertices, 0.);
-  m_normals.resize(nVertices, Vector::unit_z());
+  m_Vertices.resize(nVertices);
+  m_Faces.resize(nFaces);
+  m_Values.resize(nVertices, 0.);
+  m_Curvature.resize(nVertices, 0.);
+  m_Normals.resize(nVertices, Vector::unit_z());
 
   Point pmin, pmax; 
   // Initializing position of vertices 
@@ -94,7 +95,7 @@ void GAM::TMesh::load_off(const std::string &OFFFile)
 #endif
   file.close();
 }
-void TMesh::save_obj(const std::string &OBJFile)
+void TMesh::save_obj(const std::string &OBJFile, bool useCurvature)
 {
   std::ofstream file(std::string(OBJ_DIR) + OBJFile);
   file << "OBJ" << "\n";
@@ -107,7 +108,8 @@ void TMesh::save_obj(const std::string &OBJFile)
     file << "v " << v.X << " " << v.Y << " " << v.Z << "\n";  
   }
   // Save textcoords
-  for (const auto& v : m_values)
+  auto& data= useCurvature ? m_Curvature : m_Values;
+  for (const auto& v : data)
   {
     file << "vt " << v << " " << v << "\n";  
   }
@@ -289,29 +291,28 @@ void TMesh::smooth_normals()
     {
       vertexNormal= -vertexNormal; 
     }
-    m_values[i]= vertexNormal.norm();
-    m_normals[i]= vertexNormal; 
+   
+    m_Curvature[i]= vertexNormal.norm();
+    m_Normals[i]= vertexNormal; 
   }
 }
 
 void TMesh::curvature()
 {
-  ScalarType maxCurv= *std::max_element(m_values.begin(), m_values.end()); 
-  for (IndexType i= 0; i < m_vertices.size(); ++i) 
+  ScalarType maxCurv= *std::max_element(m_Curvature.begin(), m_Curvature.end()); 
+
+  assert(maxCurv > 0 || maxCurv < 0);
+
+  for (IndexType i= 0; i < m_Vertices.size(); ++i) 
   {
-    m_values[i]/= maxCurv;
+    m_Curvature[i]= m_Curvature[i] / maxCurv;
   }
 }
 
-void TMesh::heat_diffusion(ScalarType deltaTime, IndexType iVertex0, IndexType iVertex1)
+void TMesh::heat_diffusion(ScalarType deltaTime)
 {
-  assert(iVertex0 < vertex_count());
-  assert(iVertex1 < vertex_count());
-
-  for (int i= 0; i < vertex_count(); ++i)
+  for (int i= 1; i < number_of_vertices(); ++i)
   {
-    if (i == iVertex0 || i == iVertex1) continue; 
-    
     heat_diffusion(i, deltaTime);
   }
 }
@@ -339,14 +340,14 @@ ScalarType TMesh::laplacian(IndexType iVertex)
     IndexType nextJVertex= neighboringVertices[(j+1)%numOfNeighbors]; 
     
     // Cotangente 
-    Vector v(m_vertices[prevJVertex], m_vertices[jVertex]); 
-    Vector w(m_vertices[prevJVertex], m_vertices[iVertex]);
-    ScalarType cotAlpha= abs(v.cotan(w)); 
-    v= Vector(m_vertices[nextJVertex], m_vertices[iVertex]);
-    w= Vector(m_vertices[nextJVertex], m_vertices[jVertex]);
-    ScalarType cotBeta= abs(v.cotan(w)); 
-    ScalarType& ui= m_values[iVertex];
-    ScalarType& uj= m_values[jVertex]; 
+    Vector v(m_Vertices[prevJVertex], m_Vertices[jVertex]); 
+    Vector w(m_Vertices[prevJVertex], m_Vertices[iVertex]);
+    ScalarType cotAlpha= v.cotan(w); 
+    v= Vector(m_Vertices[nextJVertex], m_Vertices[iVertex]);
+    w= Vector(m_Vertices[nextJVertex], m_Vertices[jVertex]);
+    ScalarType cotBeta= v.cotan(w); 
+    ScalarType& ui= m_Values[iVertex];
+    ScalarType& uj= m_Values[jVertex]; 
     
     Lui+= (cotAlpha+cotBeta)*(uj-ui);
   }
