@@ -247,7 +247,7 @@ int events( Window window )
   {
     int w= std::floor(height * aspect);
     int h= height;
-    SDL_SetWindowSize(window, w, h);
+    // SDL_SetWindowSize(window, w, h);
     glViewport(0, 0, w, h);
     
     //~ printf("[resize] %dx%d aspect %f -> %dx%d aspect %f\n", width, height, aspect, w, h, float(w) / float(h));

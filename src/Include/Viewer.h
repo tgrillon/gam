@@ -22,6 +22,8 @@ public:
 
   int render();
 
+  inline void tmesh(const GAM::TMesh& mesh) { m_tmesh= mesh; }
+
 private:
   int render_ui();
   int render_any();
@@ -32,12 +34,18 @@ private:
   Mesh m_object;
   Mesh m_repere;
 
+  GAM::TMesh m_tmesh; 
+
   GLuint m_program;
   GLuint m_heat_diffusion_tex;
 
   std::string m_obj_file;
 
   Framebuffer m_framebuffer; 
+
+  float m_clear_color[3]{0.678f, 0.686f, 0.878f}; 
+  float m_mesh_color[4]{1.0f, 1.0f, 1.0f, 1.0f}; 
+  float m_light_color[4]{1.0f, 1.0f, 1.0f, 1.0f}; 
 
   bool m_show_style_editor{false};
   bool m_show_ui {true};

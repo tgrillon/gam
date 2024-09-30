@@ -68,7 +68,7 @@ int Viewer::init_any()
 
   m_heat_diffusion_tex= read_texture(0, std::string(DATA_DIR) + "/gradient.png");
 
-  m_program= read_program(std::string(SHADER_DIR) + "/gam.glsl");
+  m_program= read_program(std::string(SHADER_DIR) + "/base.glsl");
   program_print_errors(m_program);
 
   return 0;
@@ -84,7 +84,7 @@ int Viewer::render()
   }
 
   m_framebuffer.bind();
-  glClearColor(0.678f, 0.686f, 0.878f, 1.0f);
+  glClearColor(m_clear_color[0], m_clear_color[1], m_clear_color[2], 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
   glEnable(GL_DEPTH_TEST);
 
@@ -155,6 +155,10 @@ int Viewer::render_ui()
     ImGui::Checkbox("Curvature", &m_show_curvature);
     ImGui::Checkbox("Heat diffusion", &m_show_heat_diffusion);
     ImGui::Checkbox("Smooth normal", &m_show_smooth_normal);
+    ImGui::SeparatorText("SCENE");
+    ImGui::ColorPicker3("Background color", &m_clear_color[0]);
+    ImGui::ColorPicker3("Mesh color", &m_mesh_color[0]);
+    ImGui::ColorPicker3("Light color", &m_light_color[0]);
     ImGui::End();
 
     ImGui::Begin("Statistiques");
@@ -210,12 +214,26 @@ int Viewer::render_any()
   if (key_state(SDLK_w))
   {
     clear_key_state(SDLK_w);
+    if (m_show_heat_diffusion)
+    {
+      m_tmesh.curvature();
+      m_tmesh.save_obj(m_obj_file, true);
+      m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+      m_show_heat_diffusion= false; 
+    }
     m_show_curvature= !m_show_curvature; 
   }
 
   if (key_state(SDLK_h))
   {
     clear_key_state(SDLK_h);
+    if (m_show_curvature)
+    {
+      m_tmesh.reset_values();
+      m_tmesh.save_obj(m_obj_file);
+      m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+      m_show_curvature= false; 
+    }
     m_show_heat_diffusion= !m_show_heat_diffusion; 
   }
 
@@ -229,16 +247,20 @@ int Viewer::render_any()
   
   // . parametrer le shader program :
   //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
-  program_uniform(m_program, "u_MvpMatrix", mvp);
-  program_uniform(m_program, "u_MvMatrix", mv);
-  program_uniform(m_program, "u_NormalMatrix", mv.normal());
+  program_uniform(m_program, "uMvpMatrix", mvp);
+  program_uniform(m_program, "uMvMatrix", mv);
+  program_uniform(m_program, "uNormalMatrix", mv.normal());
 
   Point light= m_camera.position();
-  program_uniform(m_program, "u_Light", view(light));
-  program_uniform(m_program, "u_DrawCurvature", m_show_curvature ? 1 : 0);
-  program_uniform(m_program, "u_DrawHeatDiffusion", m_show_heat_diffusion ? 1 : 0);
-  program_uniform(m_program, "u_DrawNormalColor", m_show_normal_color ? 1 : 0);
-  program_uniform(m_program, "u_DrawSmoothNormal", m_show_smooth_normal ? 1 : 0);
+  program_uniform(m_program, "uLight", view(light));
+  GLint location= glGetUniformLocation(m_program, "uLightColor");
+  glUniform4fv(location, 1, &m_light_color[0]);
+  location= glGetUniformLocation(m_program, "uMeshColor");
+  glUniform4fv(location, 1, &m_mesh_color[0]);
+  program_uniform(m_program, "uShowCurvature", m_show_curvature ? 1 : 0);
+  program_uniform(m_program, "uShowHeatDiffusion", m_show_heat_diffusion ? 1 : 0);
+  program_uniform(m_program, "uShowNormalColor", m_show_normal_color ? 1 : 0);
+  program_uniform(m_program, "uShowSmoothNormal", m_show_smooth_normal ? 1 : 0);
 
   if (m_show_normals)
   {
@@ -249,7 +271,10 @@ int Viewer::render_any()
   }
   else if (m_show_heat_diffusion)
   {
-    program_use_texture(m_program, "u_HeatDiffusionTex", 0, m_heat_diffusion_tex);
+    m_tmesh.heat_diffusion(0.00001);
+    m_tmesh.save_obj(m_obj_file);
+    m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+    program_use_texture(m_program, "uHeatDiffusionTex", 0, m_heat_diffusion_tex);
     m_object.draw(m_program, true, true, true, false, false);
   }
   else 
@@ -294,7 +319,7 @@ int Viewer::render_menu_bar()
     ImGui::EndMainMenuBar();
   }
 
-  ImGui::ShowDemoWindow();
+  // ImGui::ShowDemoWindow();
 
   return 0;
 }

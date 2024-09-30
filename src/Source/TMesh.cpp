@@ -23,11 +23,11 @@ void GAM::TMesh::load_off(const std::string &OFFFile)
   // Retrieving number of vertices / faces 
   IndexType nVertices, nFaces, nEdges;
   file >> nVertices >> nFaces >> nEdges; 
-  m_Vertices.resize(nVertices);
-  m_Faces.resize(nFaces);
-  m_Values.resize(nVertices, 0.);
-  m_Curvature.resize(nVertices, 0.);
-  m_Normals.resize(nVertices, Vector::unit_z());
+  m_vertices.resize(nVertices);
+  m_faces.resize(nFaces);
+  m_values.resize(nVertices, 0.);
+  m_curvature.resize(nVertices, 0.);
+  m_normals.resize(nVertices, Vector::unit_z());
 
   Point pmin, pmax; 
   // Initializing position of vertices 
@@ -108,7 +108,7 @@ void TMesh::save_obj(const std::string &OBJFile, bool useCurvature)
     file << "v " << v.X << " " << v.Y << " " << v.Z << "\n";  
   }
   // Save textcoords
-  auto& data= useCurvature ? m_Curvature : m_Values;
+  auto& data= useCurvature ? m_curvature : m_values;
   for (const auto& v : data)
   {
     file << "vt " << v << " " << v << "\n";  
@@ -292,26 +292,26 @@ void TMesh::smooth_normals()
       vertexNormal= -vertexNormal; 
     }
    
-    m_Curvature[i]= vertexNormal.norm();
-    m_Normals[i]= vertexNormal; 
+    m_curvature[i]= vertexNormal.norm();
+    m_normals[i]= vertexNormal; 
   }
 }
 
 void TMesh::curvature()
 {
-  ScalarType maxCurv= *std::max_element(m_Curvature.begin(), m_Curvature.end()); 
+  ScalarType maxCurv= *std::max_element(m_curvature.begin(), m_curvature.end()); 
 
   assert(maxCurv > 0 || maxCurv < 0);
 
-  for (IndexType i= 0; i < m_Vertices.size(); ++i) 
+  for (IndexType i= 0; i < m_vertices.size(); ++i) 
   {
-    m_Curvature[i]= m_Curvature[i] / maxCurv;
+    m_curvature[i]= m_curvature[i] / maxCurv;
   }
 }
 
 void TMesh::heat_diffusion(ScalarType deltaTime)
 {
-  for (int i= 1; i < number_of_vertices(); ++i)
+  for (int i= 1; i < vertex_count(); ++i)
   {
     heat_diffusion(i, deltaTime);
   }
@@ -340,14 +340,14 @@ ScalarType TMesh::laplacian(IndexType iVertex)
     IndexType nextJVertex= neighboringVertices[(j+1)%numOfNeighbors]; 
     
     // Cotangente 
-    Vector v(m_Vertices[prevJVertex], m_Vertices[jVertex]); 
-    Vector w(m_Vertices[prevJVertex], m_Vertices[iVertex]);
+    Vector v(m_vertices[prevJVertex], m_vertices[jVertex]); 
+    Vector w(m_vertices[prevJVertex], m_vertices[iVertex]);
     ScalarType cotAlpha= v.cotan(w); 
-    v= Vector(m_Vertices[nextJVertex], m_Vertices[iVertex]);
-    w= Vector(m_Vertices[nextJVertex], m_Vertices[jVertex]);
+    v= Vector(m_vertices[nextJVertex], m_vertices[iVertex]);
+    w= Vector(m_vertices[nextJVertex], m_vertices[jVertex]);
     ScalarType cotBeta= v.cotan(w); 
-    ScalarType& ui= m_Values[iVertex];
-    ScalarType& uj= m_Values[jVertex]; 
+    ScalarType& ui= m_values[iVertex];
+    ScalarType& uj= m_values[jVertex]; 
     
     Lui+= (cotAlpha+cotBeta)*(uj-ui);
   }

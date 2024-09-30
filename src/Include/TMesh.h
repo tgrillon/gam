@@ -4,17 +4,27 @@
 
 namespace GAM 
 {
-//! Triangulated mesh. 
+/// @brief Triangulated mesh. 
 class TMesh 
 {
 public:
   TMesh()=default; 
   TMesh(const std::vector<ScalarType>& values) : m_values(values) {} 
 
-  inline void vertex_value(IndexType iVertex, ScalarType v) { m_values[iVertex]= v; }
+  //! Set the vertex value at index i.
+  inline void vertex_value(IndexType iVertex, ScalarType v) { assert(iVertex < vertex_count()); m_values[iVertex]= v; }
+
+  //! Set the values of all vertices.
   inline void vertices_values(const std::vector<ScalarType>& values) { m_values= values; }
-  inline ScalarType vertex_value(IndexType iVertex) const { return m_values[iVertex]; }
-  inline std::vector<ScalarType> vertices_values(const std::vector<ScalarType>& values) const { return m_values; }
+
+  //! Set vertices values to 0.
+  inline void reset_values() { m_values= std::vector<ScalarType>(vertex_count(), 0.); }
+
+  //! Get the vertex value at index i.
+  inline ScalarType vertex_value(IndexType iVertex) const { assert(iVertex < vertex_count()); return m_values[iVertex]; }
+
+  //! Get the values of all vertices.
+  inline std::vector<ScalarType> vertices_values() const { return m_values; }
 
   //! Get the number of vertex of the mesh. 
   inline IndexType vertex_count() const { return m_vertices.size(); }
@@ -26,7 +36,7 @@ public:
   void load_off(const std::string& OFFFile);
 
   //! Save the mesh as an .obj file. 
-  void save_obj(const std::string& OBJFile);
+  void save_obj(const std::string& OBJFile, bool useCurvature= false);
 
   //! Get the local index for a vertex located on the face of index `iFace`.
   IndexType local_index(IndexType iVertex, IndexType iFace) const;  
@@ -55,19 +65,18 @@ public:
   //! Calculate the Laplacian of a discrete function defined on the mesh.
   void laplacian();
 
-  //! Compute normal of the given face. 
   Vector face_normal(IndexType iFace) const;
 
   //! Compute normal of each vertex of the mesh. 
   void smooth_normals();
 
-  //! Compute mesh curvature.
+  //! Compute curvature value at each vertex. 
   void curvature();
 
-  //! Heat diffusion operation on the whole mesh at a given time.
-  void heat_diffusion(ScalarType deltaTime, IndexType iVertex0, IndexType iVertex1);
+  //! Perform heat diffusion using the Laplacian equation. 
+  void heat_diffusion(ScalarType deltaTime);
 
-  //! Heat diffusion operation on the given vertex at a given time.
+  //! Calculate the vertex value for the heat diffusion. 
   void heat_diffusion(IndexType iVertex, ScalarType deltaTime);
 
 private: 
@@ -92,5 +101,8 @@ private:
 
   //! Vertices values (must be of the same size as m_vertices). 
   std::vector<ScalarType> m_values;
+
+  //! Vertices curavture (must be of the same size as m_vertices). 
+  std::vector<ScalarType> m_curvature;
 };
 } // namespace GAM

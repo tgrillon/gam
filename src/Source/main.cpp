@@ -45,7 +45,7 @@ std::string outputFile= "/" + filename + ".obj";
   mesh.smooth_normals();
   mesh.curvature();
   mesh.save_obj(outputFile, true);
-  Application app(outputFile);
+  Viewer app(outputFile);
   app.tmesh(mesh);
   app.run();
 #endif
