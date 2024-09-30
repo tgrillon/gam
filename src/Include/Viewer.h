@@ -22,7 +22,7 @@ public:
 
   int render();
 
-  inline void tmesh(const GAM::TMesh& mesh) { m_tmesh= mesh; }
+  inline void tmesh(const gam::TMesh& mesh) { m_tmesh= mesh; }
 
 private:
   int render_ui();
@@ -34,12 +34,13 @@ private:
   Mesh m_object;
   Mesh m_repere;
 
-  GAM::TMesh m_tmesh; 
+  gam::TMesh m_tmesh; 
 
   GLuint m_program;
   GLuint m_heat_diffusion_tex;
 
   std::string m_obj_file;
+  std::string m_file_name;
 
   Framebuffer m_framebuffer; 
 

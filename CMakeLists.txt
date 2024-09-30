@@ -30,6 +30,7 @@ add_library(imgui STATIC ${IMGUI_SOURCE_DIR}/imgui_demo.cpp
                          ${IMGUI_SOURCE_DIR}/imgui_impl_sdl2.cpp                         
                          ${IMGUI_SOURCE_DIR}/imgui_impl_opengl3.cpp                         
                          ${IMGUI_SOURCE_DIR}/imgui_tables.cpp                         
+                         ${IMGUI_SOURCE_DIR}/imgui_stdlib.cpp                         
                          ${IMGUI_SOURCE_DIR}/imgui_widgets.cpp                         
                          ${IMGUI_SOURCE_DIR}/imgui.cpp
                          ${IMGUI_INCLUDE_DIR}/imconfig.h                         
@@ -38,6 +39,7 @@ add_library(imgui STATIC ${IMGUI_SOURCE_DIR}/imgui_demo.cpp
                          ${IMGUI_INCLUDE_DIR}/imgui_impl_opengl3_loader.h                         
                          ${IMGUI_INCLUDE_DIR}/imgui_internal.h                         
                          ${IMGUI_INCLUDE_DIR}/imgui.h                         
+                         ${IMGUI_INCLUDE_DIR}/imgui_stdlib.h                         
                          ${IMGUI_INCLUDE_DIR}/imstb_rectpack.h                         
                          ${IMGUI_INCLUDE_DIR}/imstb_textedit.h                         
                          ${IMGUI_INCLUDE_DIR}/imstb_truetype.h)
@@ -45,15 +47,17 @@ add_library(imgui STATIC ${IMGUI_SOURCE_DIR}/imgui_demo.cpp
 target_include_directories(imgui PUBLIC ${IMGUI_INCLUDE_DIR})
 target_link_libraries(imgui PUBLIC SDL2)
 
+set(MAIN_DIR "${CMAKE_SOURCE_DIR}/src/")
 set(SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/Source")
 set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/Include")
-add_executable(${PROJECT_NAME} ${SOURCE_DIR}/main.cpp 
+add_executable(${PROJECT_NAME} ${MAIN_DIR}/main.cpp 
                                ${SOURCE_DIR}/TMesh.cpp
                                ${SOURCE_DIR}/geometry.cpp
                                ${SOURCE_DIR}/Viewer.cpp
                                ${SOURCE_DIR}/Window.cpp
                                ${SOURCE_DIR}/App.cpp
                                ${SOURCE_DIR}/Framebuffer.cpp
+                               ${SOURCE_DIR}/Delaunay.cpp
                                ${INCLUDE_DIR}/utils.h
                                ${INCLUDE_DIR}/TMesh.h
                                ${INCLUDE_DIR}/geometry.h
@@ -61,6 +65,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_DIR}/main.cpp
                                ${INCLUDE_DIR}/Window.h
                                ${INCLUDE_DIR}/App.h
                                ${INCLUDE_DIR}/Framebuffer.h
+                               ${INCLUDE_DIR}/Delaunay.h
                                )
 
 target_link_libraries(${PROJECT_NAME} gkit

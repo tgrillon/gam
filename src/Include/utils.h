@@ -12,7 +12,7 @@
 #include <iomanip>
 #include <algorithm>
 
-namespace GAM
+namespace gam
 {
 using ScalarType= double;
 using IndexType= size_t;

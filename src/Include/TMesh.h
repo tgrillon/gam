@@ -2,9 +2,9 @@
 
 #include "geometry.h"
 
-namespace GAM 
+namespace gam 
 {
-/// @brief Triangulated mesh. 
+//! Triangulated mesh. 
 class TMesh 
 {
 public:
@@ -105,4 +105,4 @@ private:
   //! Vertices curavture (must be of the same size as m_vertices). 
   std::vector<ScalarType> m_curvature;
 };
-} // namespace GAM
+} // namespace gam

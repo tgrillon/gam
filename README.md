@@ -14,7 +14,7 @@ Ce projet a été réalisé dans le cadre de l'unité d'enseignement **Maillages
 |   |   └──queen.off          # Fichier d'entrer.
 |   ├── shaders             # Shaders utilisés pour le rendu avec GKit.
 |   └── gradient.png        # Texture utilisée pour la diffusion de chaleur. 
-├── GAM                   # Code 
+├── gam                   # Code 
 |   ├── Include             # Fichiers .h.  
 |   |   ├── Application.h     # Classe pour l'affichage (utilise GKit). 
 |   |   ├── geometry.h        # Définitions de plusieurs objets : Vertex, Face, Vector, etc...
@@ -63,12 +63,12 @@ La librairie Gkit2light est utilisée pour visualiser le maillage. Elle doit êt
 
 - Configuration/Build 
 ```
-cd /path/to/gam && cmake -B build -DGKIT_DIR=/path/to/gkit2light && cmake --build build/ -t GAM 
+cd /path/to/gam && cmake -B build -DGKIT_DIR=/path/to/gkit2light && cmake --build build/ -t gam 
 ``` 
 
 - Exécution 
 ```
-./build/GAM <nom du fichier sans extension (par défault: queen)>
+./build/gam <nom du fichier sans extension (par défault: queen)>
 ```
 
 # Fonctionnalités de l'application

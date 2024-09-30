@@ -125,6 +125,7 @@ int Viewer::render_ui()
     ImGuiIO& io= ImGui::GetIO(); (void)io;
 
     io.WantCaptureMouse= false; 
+    io.WantCaptureKeyboard= false; 
   }
 
   // we access the ImGui window size
@@ -150,15 +151,52 @@ int Viewer::render_ui()
   if (m_show_ui)
   {
     ImGui::Begin("Parameters");
+    ImGui::SeparatorText("LOAD MESH");
+    ImGui::InputTextWithHint("Off name", "queen", &m_file_name);
+    if (ImGui::Button("Load mesh", ImVec2(100, 25)))
+    {
+      m_tmesh.load_off("/" + m_file_name + ".off");
+      m_obj_file= "/" + m_file_name + ".obj"; 
+      m_tmesh.vertex_value(0, 100);
+      m_tmesh.smooth_normals();
+      m_tmesh.curvature();
+      m_tmesh.save_obj(m_obj_file, true);
+      m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+
+      Point pmin, pmax; 
+      m_object.bounds(pmin, pmax);
+      m_camera.lookat(pmin, pmax);
+    }
+    ImGui::SeparatorText("SCENE");
+
+    // ImGui::InputText("Obj name", );
     ImGui::Checkbox("Show normals", &m_show_normals);
     ImGui::Checkbox("Normal color", &m_show_normal_color);
-    ImGui::Checkbox("Curvature", &m_show_curvature);
-    ImGui::Checkbox("Heat diffusion", &m_show_heat_diffusion);
+    if (ImGui::Checkbox("Curvature", &m_show_curvature))
+    {
+      if (m_show_heat_diffusion)
+      {
+        m_tmesh.curvature();
+        m_tmesh.save_obj(m_obj_file, true);
+        m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+        m_show_heat_diffusion= false; 
+      }
+    }
+    if (ImGui::Checkbox("Heat diffusion", &m_show_heat_diffusion))
+    {
+      if (m_show_curvature)
+      {
+        m_tmesh.reset_values();
+        m_tmesh.save_obj(m_obj_file);
+        m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+        m_show_curvature= false; 
+      }
+    }
     ImGui::Checkbox("Smooth normal", &m_show_smooth_normal);
-    ImGui::SeparatorText("SCENE");
-    ImGui::ColorPicker3("Background color", &m_clear_color[0]);
-    ImGui::ColorPicker3("Mesh color", &m_mesh_color[0]);
-    ImGui::ColorPicker3("Light color", &m_light_color[0]);
+    ImGui::SeparatorText("COLOR");
+    ImGui::ColorPicker3("Background", &m_clear_color[0]);
+    ImGui::ColorPicker3("Mesh", &m_mesh_color[0]);
+    ImGui::ColorPicker3("Light", &m_light_color[0]);
     ImGui::End();
 
     ImGui::Begin("Statistiques");
@@ -193,48 +231,53 @@ int Viewer::render_any()
   
   Transform tf= Scale(m_camera.radius() * 0.1);
 
-  if (key_state(SDLK_n)) 
+  ImGuiIO& io= ImGui::GetIO(); (void)io;
+  if (!io.WantCaptureKeyboard && !io.WantCaptureMouse)
   {
-    clear_key_state(SDLK_n);
-    m_show_normals= !m_show_normals; 
-  }
 
-  if (key_state(SDLK_k)) 
-  {
-    clear_key_state(SDLK_k);
-    m_show_smooth_normal= !m_show_smooth_normal; 
-  }
-
-  if (key_state(SDLK_m))
-  {
-    clear_key_state(SDLK_m);
-    m_show_normal_color= !m_show_normal_color;
-  } 
-
-  if (key_state(SDLK_w))
-  {
-    clear_key_state(SDLK_w);
-    if (m_show_heat_diffusion)
+    if (key_state(SDLK_n)) 
     {
-      m_tmesh.curvature();
-      m_tmesh.save_obj(m_obj_file, true);
-      m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
-      m_show_heat_diffusion= false; 
+      clear_key_state(SDLK_n);
+      m_show_normals= !m_show_normals; 
     }
-    m_show_curvature= !m_show_curvature; 
-  }
 
-  if (key_state(SDLK_h))
-  {
-    clear_key_state(SDLK_h);
-    if (m_show_curvature)
+    if (key_state(SDLK_k)) 
     {
-      m_tmesh.reset_values();
-      m_tmesh.save_obj(m_obj_file);
-      m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
-      m_show_curvature= false; 
+      clear_key_state(SDLK_k);
+      m_show_smooth_normal= !m_show_smooth_normal; 
     }
-    m_show_heat_diffusion= !m_show_heat_diffusion; 
+
+    if (key_state(SDLK_m))
+    {
+      clear_key_state(SDLK_m);
+      m_show_normal_color= !m_show_normal_color;
+    } 
+
+    if (key_state(SDLK_w))
+    {
+      clear_key_state(SDLK_w);
+      if (m_show_heat_diffusion)
+      {
+        m_tmesh.curvature();
+        m_tmesh.save_obj(m_obj_file, true);
+        m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+        m_show_heat_diffusion= false; 
+      }
+      m_show_curvature= !m_show_curvature; 
+    }
+
+    if (key_state(SDLK_h))
+    {
+      clear_key_state(SDLK_h);
+      if (m_show_curvature)
+      {
+        m_tmesh.reset_values();
+        m_tmesh.save_obj(m_obj_file);
+        m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+        m_show_curvature= false; 
+      }
+      m_show_heat_diffusion= !m_show_heat_diffusion; 
+    }
   }
 
   Transform model= Identity();

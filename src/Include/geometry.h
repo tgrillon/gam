@@ -2,7 +2,7 @@
 
 #include "utils.h"
 
-namespace GAM
+namespace gam
 {
 struct Point
 {
@@ -30,6 +30,8 @@ struct Point
   friend Point operator/=(const Point& a, ScalarType s);
   friend Point operator/(const Point& a, const Point& b);
   friend Point operator/=(const Point& a, const Point& b);
+
+  friend std::ostream& operator<<(std::ostream& out, const Point& p);
 };
 
 struct Vertex 
@@ -114,4 +116,6 @@ struct Vector
 
   ScalarType X, Y, Z;
 };
-} // namespace GAM
+
+bool within_abc(const Point& p, const Point& a, const Point& b, const Point& c);
+} // namespace gam

@@ -1,10 +1,16 @@
 #include "TMesh.h"
 
 #define DEBUG
-namespace GAM
+namespace gam
 {
-void GAM::TMesh::load_off(const std::string &OFFFile)
+void gam::TMesh::load_off(const std::string &OFFFile)
 {
+  m_vertices.clear();
+  m_faces.clear();
+  m_normals.clear();
+  m_curvature.clear();
+  m_values.clear();
+
   std::ifstream file(std::string(OFF_DIR) + OFFFile);
   // Checking if we can read the file 
   if (!file.is_open())
@@ -398,4 +404,4 @@ void TMesh::integrity_check() const
             face.Vertices[2]==i);  
   }
 }
-} // namespace GAM
+} // namespace gam

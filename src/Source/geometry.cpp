@@ -1,6 +1,6 @@
 #include "geometry.h"
 
-namespace GAM
+namespace gam
 {
 Vector operator*(ScalarType s, const Vector &V)
 {
@@ -48,6 +48,30 @@ std::ostream &operator<<(std::ostream &out, const Vector &V)
 {
   out << "Vector : [" << V.X << ", " << V.Y << ", " << V.Z << "]";
   return out;
+}
+
+bool within_abc(const Point &p, const Point &a, const Point &b, const Point &c)
+{
+  Vector ab(a, b);
+  Vector ac(a, c);
+  Vector bc(b, c);
+
+  Vector ap(a, p);
+  Vector cap1= ab.cross(ap); 
+  Vector cap2= ap.cross(ac); 
+  ScalarType d1= cap1.dot(cap2); 
+
+  Vector bp(b, p);
+  Vector cbp1= bc.cross(bp); 
+  Vector cbp2= bp.cross(-ab); 
+  ScalarType d2= cbp1.dot(cbp2);
+
+  Vector cp(c, p);
+  Vector ccp1= -ac.cross(cp); 
+  Vector ccp2= cp.cross(-bc); 
+  ScalarType d3= ccp1.dot(ccp2); 
+
+  return d1 * d2 > 0 && d1 * d3 > 0 && d2 * d3 > 0;
 }
 
 std::ostream &operator<<(std::ostream &out, const Vertex &V)
@@ -166,6 +190,12 @@ Point operator/=(const Point &a, const Point &b)
   return a / b;
 }
 
+std::ostream &operator<<(std::ostream &out, const Point &p)
+{
+  out << "Point : [" << p.X << ", " << p.Y << ", " << p.Z << "]"; 
+  return out;
+}
+
 ScalarType Vector::cotan(const Vector &V) const
 {
   ScalarType sinTheta= (this->cross(V)).norm();
@@ -178,4 +208,4 @@ ScalarType Vector::cotan(const Vector &V) const
   return 0.;
 }
 
-} // namespace GAM
+} // namespace gam
