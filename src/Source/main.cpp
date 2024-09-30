@@ -1,5 +1,5 @@
 #include "TMesh.h"
-#include "Application.h"
+#include "Viewer.h"
 
 #include <chrono>
 
@@ -93,7 +93,7 @@ std::string outputFile= "/" + filename + ".obj";
 #endif
 
 #if defined(SMOOTH_NORMAL) || defined(CURVATURE) || defined(HEAT_DIFFUSION)
-  Application app(outputFile);
+  Viewer app(outputFile);
   app.run();
 #endif
 }

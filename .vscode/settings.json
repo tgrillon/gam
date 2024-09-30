@@ -87,5 +87,8 @@
     // "args": ["sphere"]
     // "args": ["armadillo"]
     // "args": ["cube_maillage_triangles"]
+  },
+  "cmake.configureSettings": {
+    "GKIT_DIR": "/home/friska/dev/cxx/gkit2light"
   }
 }
