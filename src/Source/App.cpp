@@ -217,6 +217,9 @@ int App::init_imgui()
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+  // ImGui::LoadIniSettingsFromMemory((std::string(CMAKE_SOURCE_DIR) + "/imgui.ini").c_str());
+  // io.WantSaveIniSettings= true; 
+
   // Setup Dear ImGui style
   ImGui::StyleColorsClassic();
 
@@ -267,6 +270,7 @@ int App::quit_sdl()
 
 int App::quit_imgui()
 {
+  ImGui::SaveIniSettingsToDisk((std::string(CMAKE_SOURCE_DIR) + "/imgui.ini").c_str());
   // Cleanup ImGui
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplSDL2_Shutdown();

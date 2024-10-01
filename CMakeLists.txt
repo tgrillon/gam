@@ -70,10 +70,12 @@ add_executable(${PROJECT_NAME} ${MAIN_DIR}/main.cpp
 
 target_link_libraries(${PROJECT_NAME} gkit
                                       imgui)
+                                      
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIR})
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC DATA_DIR="${DATA_DIR}"
                                                   OFF_DIR="${OFF_DIR}"
                                                   OBJ_DIR="${OBJ_DIR}"
                                                   SHADER_DIR="${SHADER_DIR}"
+                                                  CMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
                                                   )

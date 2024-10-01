@@ -55,6 +55,7 @@ GLuint read_program(const std::string& filepath)
 
 Viewer::Viewer(const std::string& obj) : App(1024, 640), m_framebuffer(window_width(), window_height()), m_obj_file(obj)
 {
+  m_camera.projection(window_width(), window_height(), 45);
 }
 
 int Viewer::init_any()
