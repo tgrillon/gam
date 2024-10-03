@@ -5,6 +5,8 @@ App::App(const int width, const int height, const int major, const int minor, co
   m_window= create_window(width, height, major, minor, samples);
   m_context= create_context(m_window);
 
+  m_camera.projection(width, height, 45.f);
+
   // requetes pour mesurer le temps gpu
   m_frame= 0;
   glGenQueries(MAX_FRAMES, m_time_query);

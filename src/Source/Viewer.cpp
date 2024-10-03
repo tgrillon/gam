@@ -135,6 +135,8 @@ int Viewer::render_ui()
 
   // we rescale the framebuffer to the actual window size here and reset the glViewport 
   m_framebuffer.rescale(window_width, window_height);
+  glViewport(0, 0, window_width, window_height);
+  m_camera.projection(window_width, window_height, 45.f);
 
   // we get the screen position of the window
   ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -335,29 +337,19 @@ int Viewer::render_menu_bar()
 
   if (ImGui::BeginMainMenuBar()) 
   {
-    if (ImGui::BeginMenu("Edit")) 
+    // ImGui::MenuItem("Style Editor", NULL, &m_show_style_editor);
+    ImGui::MenuItem("Exit", NULL, &m_exit);
+    ImGui::MenuItem(m_show_ui ? "Hide UI" : "Show UI", NULL, &m_show_ui);
+    if (ImGui::MenuItem(m_dark_theme ? "Light Theme" : "Dark Theme", NULL, &m_dark_theme))
     {
-      ImGui::MenuItem("Style Editor", NULL, &m_show_style_editor);
-      ImGui::MenuItem("Control Panel", NULL, &m_show_ui);
-      ImGui::MenuItem("Exit", NULL, &m_exit);
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("Style"))
-    {
-      if (ImGui::MenuItem("Dark"))
+      if (m_dark_theme)
       {
         ImGui::StyleColorsDark();
       }
-      if (ImGui::MenuItem("Light"))
+      else 
       {
         ImGui::StyleColorsLight();
       }
-      if (ImGui::MenuItem("Classic"))
-      {
-        ImGui::StyleColorsClassic();
-      }
-
-      ImGui::EndMenu();
     }
 
     ImGui::EndMainMenuBar();

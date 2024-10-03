@@ -50,6 +50,7 @@ private:
 
   bool m_show_style_editor{false};
   bool m_show_ui {true};
+  bool m_dark_theme {true};
   bool m_need_update{false}; 
 
   bool m_show_normals{false}; 
