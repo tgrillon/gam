@@ -36,8 +36,11 @@ struct Point
 
 struct Vertex 
 {
-  ScalarType X, Y, Z; 
-  int FaceIndex { -1 }; 
+  Vertex()=default;
+  Vertex(const Point& point, int iFace=-1);
+
+  ScalarType X {0}, Y {0}, Z {0}; 
+  int FaceIndex {-1}; 
 
   //! Transform a Vertex into a Point.
   inline static Point as_point(const Vertex& V) { return Point(V.X, V.Y, V.Z); }
@@ -47,6 +50,12 @@ struct Vertex
 
 struct Face
 {
+  Face()=default; 
+  Face(int v0, int v1, int v2, int n0, int n1, int n2);
+
+  void vertices(int v0, int v1, int v2);
+  void neighbors(int n0, int n1, int n2);
+
   int Vertices[3]  { -1, -1, -1 };
   int Neighbors[3] { -1, -1, -1 };
 };

@@ -40,14 +40,7 @@ int main(int argc, char** argv)
 
 std::string outputFile= "/" + filename + ".obj"; 
 #ifdef RENDER_MESH
-  mesh.load_off(fileOFF);
-  mesh.vertex_value(0, 100);
-  // mesh.vertex_value(1, -100);
-  mesh.smooth_normals();
-  mesh.curvature();
-  mesh.save_obj(outputFile, true);
-  Viewer app(outputFile);
-  app.tmesh(mesh);
+  Viewer app;
   app.run();
 #endif
 
@@ -57,4 +50,5 @@ std::string outputFile= "/" + filename + ".obj";
 
   utils::logln("Within ABC: ", (gam::within_abc({-9.56315,4.26221, 0.0}, {-8.68194,4.61808, 0.0}, {-9.26659,3.55047, 0.0}, {-5.80955,2.44896, 0.0}) ? "YES" : "NO"));
 #endif
+
 }

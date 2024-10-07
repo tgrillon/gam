@@ -8,7 +8,7 @@
 class Viewer : public App
 {
 public:
-  Viewer(const std::string& obj);
+  Viewer();
 
   int init_any();
   int quit_any();
@@ -30,6 +30,7 @@ private:
   gam::TMesh m_tmesh; 
 
   GLuint m_program;
+  GLuint m_program_edges;
   GLuint m_heat_diffusion_tex;
 
   std::string m_obj_file;
@@ -39,7 +40,7 @@ private:
 
   float m_clear_color[3]{0.678f, 0.686f, 0.878f}; 
   float m_mesh_color[4]{1.0f, 1.0f, 1.0f, 1.0f}; 
-  float m_light_color[4]{1.0f, 1.0f, 1.0f, 1.0f}; 
+  float m_edges_color[4]{1.0f, 1.0f, 0.0f, 1.0f}; 
 
   bool m_show_style_editor{false};
   bool m_show_ui {true};
@@ -51,4 +52,9 @@ private:
   bool m_show_heat_diffusion{false};
   bool m_show_normal_color{false};
   bool m_show_smooth_normal{false};
+
+  bool m_show_faces{true};
+  bool m_show_edges{false};
+
+  float m_line_width{2.0};
 };
