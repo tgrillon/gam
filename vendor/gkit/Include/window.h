@@ -2,7 +2,11 @@
 #ifndef _WINDOW_H
 #define _WINDOW_H
 
-#include "pch.h"
+#include <string>
+#include <vector>
+
+#include <SDL2/SDL.h>
+
 
 //! \addtogroup application utilitaires pour creer une application
 ///@{

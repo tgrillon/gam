@@ -1,16 +1,6 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <cassert>
-#include <utility>
-#include <cmath>
-#include <ranges>
-#include <iomanip>
-#include <algorithm>
+#include "pch.h"
 
 namespace gam
 {

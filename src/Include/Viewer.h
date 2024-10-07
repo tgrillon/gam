@@ -1,12 +1,5 @@
 #pragma once
 
-#include <string>
-
-#include "uniforms.h"
-#include "draw.h"
-#include "mesh.h"
-#include "wavefront.h"
-
 #include "App.h"
 #include "Framebuffer.h"
 #include "TMesh.h"

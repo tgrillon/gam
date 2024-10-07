@@ -60,8 +60,7 @@ Viewer::Viewer(const std::string& obj) : App(1024, 640), m_framebuffer(window_wi
 
 int Viewer::init_any()
 {
-  std::string obj_path= std::string(OBJ_DIR) + m_obj_file;
-  m_object= read_mesh(obj_path);
+  m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
 
   Point pmin, pmax; 
   m_object.bounds(pmin, pmax);
@@ -106,6 +105,109 @@ int Viewer::quit_any()
   m_object.release();
   glDeleteTextures(1, &m_heat_diffusion_tex);
   release_program(m_program);
+  return 0;
+}
+
+int Viewer::render_any()
+{
+  glUseProgram(m_program);
+  
+  Transform tf= Scale(m_camera.radius() * 0.1);
+
+  ImGuiIO& io= ImGui::GetIO(); (void)io;
+  if (!io.WantCaptureKeyboard && !io.WantCaptureMouse)
+  {
+
+    if (key_state(SDLK_n)) 
+    {
+      clear_key_state(SDLK_n);
+      m_show_normals= !m_show_normals; 
+    }
+
+    if (key_state(SDLK_k)) 
+    {
+      clear_key_state(SDLK_k);
+      m_show_smooth_normal= !m_show_smooth_normal; 
+    }
+
+    if (key_state(SDLK_m))
+    {
+      clear_key_state(SDLK_m);
+      m_show_normal_color= !m_show_normal_color;
+    } 
+
+    if (key_state(SDLK_w))
+    {
+      clear_key_state(SDLK_w);
+      if (m_show_heat_diffusion)
+      {
+        m_tmesh.curvature();
+        m_tmesh.save_obj(m_obj_file, true);
+        m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+        m_show_heat_diffusion= false; 
+      }
+      m_show_curvature= !m_show_curvature; 
+    }
+
+    if (key_state(SDLK_h))
+    {
+      clear_key_state(SDLK_h);
+      if (m_show_curvature)
+      {
+        m_tmesh.reset_values();
+        m_tmesh.save_obj(m_obj_file);
+        m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+        m_show_curvature= false; 
+      }
+      m_show_heat_diffusion= !m_show_heat_diffusion; 
+    }
+  }
+
+  Transform model= Identity();
+  Transform view= m_camera.view();
+  Transform projection= m_camera.projection();
+  
+  // . composer les transformations : model, view et projection
+  Transform mvp= projection * view * model;
+  Transform mv= model * view;
+  
+  // . parametrer le shader program :
+  //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+  program_uniform(m_program, "uMvpMatrix", mvp);
+  program_uniform(m_program, "uMvMatrix", mv);
+  program_uniform(m_program, "uNormalMatrix", mv.normal());
+
+  Point light= m_camera.position();
+  program_uniform(m_program, "uLight", view(light));
+  GLint location= glGetUniformLocation(m_program, "uLightColor");
+  glUniform4fv(location, 1, &m_light_color[0]);
+  location= glGetUniformLocation(m_program, "uMeshColor");
+  glUniform4fv(location, 1, &m_mesh_color[0]);
+  program_uniform(m_program, "uShowCurvature", m_show_curvature ? 1 : 0);
+  program_uniform(m_program, "uShowHeatDiffusion", m_show_heat_diffusion ? 1 : 0);
+  program_uniform(m_program, "uShowNormalColor", m_show_normal_color ? 1 : 0);
+  program_uniform(m_program, "uShowSmoothNormal", m_show_smooth_normal ? 1 : 0);
+
+  if (m_show_normals)
+  {
+    DrawParam param;
+    param.model(Identity()).view(view).projection(projection);
+    param.debug_normals(0.02*m_camera.radius());
+    param.draw(m_object);
+  }
+  else if (m_show_heat_diffusion)
+  {
+    m_tmesh.heat_diffusion(0.00001);
+    m_tmesh.save_obj(m_obj_file);
+    m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
+    program_use_texture(m_program, "uHeatDiffusionTex", 0, m_heat_diffusion_tex);
+    m_object.draw(m_program, true, true, true, false, false);
+  }
+  else 
+  {
+    m_object.draw(m_program, true, true, true, false, false);
+  }
+
   return 0;
 }
 
@@ -224,109 +326,6 @@ int Viewer::render_ui()
   }
 
   ImGui::Render();
-
-  return 0;
-}
-
-int Viewer::render_any()
-{
-  glUseProgram(m_program);
-  
-  Transform tf= Scale(m_camera.radius() * 0.1);
-
-  ImGuiIO& io= ImGui::GetIO(); (void)io;
-  if (!io.WantCaptureKeyboard && !io.WantCaptureMouse)
-  {
-
-    if (key_state(SDLK_n)) 
-    {
-      clear_key_state(SDLK_n);
-      m_show_normals= !m_show_normals; 
-    }
-
-    if (key_state(SDLK_k)) 
-    {
-      clear_key_state(SDLK_k);
-      m_show_smooth_normal= !m_show_smooth_normal; 
-    }
-
-    if (key_state(SDLK_m))
-    {
-      clear_key_state(SDLK_m);
-      m_show_normal_color= !m_show_normal_color;
-    } 
-
-    if (key_state(SDLK_w))
-    {
-      clear_key_state(SDLK_w);
-      if (m_show_heat_diffusion)
-      {
-        m_tmesh.curvature();
-        m_tmesh.save_obj(m_obj_file, true);
-        m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
-        m_show_heat_diffusion= false; 
-      }
-      m_show_curvature= !m_show_curvature; 
-    }
-
-    if (key_state(SDLK_h))
-    {
-      clear_key_state(SDLK_h);
-      if (m_show_curvature)
-      {
-        m_tmesh.reset_values();
-        m_tmesh.save_obj(m_obj_file);
-        m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
-        m_show_curvature= false; 
-      }
-      m_show_heat_diffusion= !m_show_heat_diffusion; 
-    }
-  }
-
-  Transform model= Identity();
-  Transform view= m_camera.view();
-  Transform projection= m_camera.projection(window_width(), window_height(), 45);
-  
-  // . composer les transformations : model, view et projection
-  Transform mvp= projection * view * model;
-  Transform mv= model * view;
-  
-  // . parametrer le shader program :
-  //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
-  program_uniform(m_program, "uMvpMatrix", mvp);
-  program_uniform(m_program, "uMvMatrix", mv);
-  program_uniform(m_program, "uNormalMatrix", mv.normal());
-
-  Point light= m_camera.position();
-  program_uniform(m_program, "uLight", view(light));
-  GLint location= glGetUniformLocation(m_program, "uLightColor");
-  glUniform4fv(location, 1, &m_light_color[0]);
-  location= glGetUniformLocation(m_program, "uMeshColor");
-  glUniform4fv(location, 1, &m_mesh_color[0]);
-  program_uniform(m_program, "uShowCurvature", m_show_curvature ? 1 : 0);
-  program_uniform(m_program, "uShowHeatDiffusion", m_show_heat_diffusion ? 1 : 0);
-  program_uniform(m_program, "uShowNormalColor", m_show_normal_color ? 1 : 0);
-  program_uniform(m_program, "uShowSmoothNormal", m_show_smooth_normal ? 1 : 0);
-
-  if (m_show_normals)
-  {
-    DrawParam param;
-    param.model(Identity()).view(view).projection(projection);
-    param.debug_normals(0.02*m_camera.radius());
-    param.draw(m_object);
-  }
-  else if (m_show_heat_diffusion)
-  {
-    m_tmesh.heat_diffusion(0.00001);
-    m_tmesh.save_obj(m_obj_file);
-    m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
-    program_use_texture(m_program, "uHeatDiffusionTex", 0, m_heat_diffusion_tex);
-    m_object.draw(m_program, true, true, true, false, false);
-  }
-  else 
-  {
-    m_object.draw(m_program, true, true, true, false, false);
-  }
 
   return 0;
 }
