@@ -97,7 +97,7 @@ void gam::TMesh::load_off(const std::string &OFFFile)
     }
     #ifdef DEBUG
     integrity_check();
-    utils::logln("TMesh successfully loaded!");
+    utils::status("TMesh successfully loaded");
     #endif
     file.close();
 }
@@ -133,7 +133,7 @@ void TMesh::save_obj(const std::string &OBJFile, bool useCurvature)
         file << (f.Vertices[2] + 1) << "/" << (f.Vertices[2] + 1) << "/" << (f.Vertices[2] + 1) <<  "\n";
     }
     file.close();
-    utils::logln("File ", OBJFile, " successfully saved!");
+    utils::status("File ", OBJFile, " successfully saved");
 }
 
 IndexType TMesh::local_index(IndexType iVertex, IndexType iFace) const
@@ -151,10 +151,10 @@ void TMesh::print_neighboring_faces_of_face(IndexType iFace) const
     assert(iFace < face_count());
 
     int i= 0; 
-    utils::logln("--Neighboring faces of face ", iFace, "--");
+    utils::message("--Neighboring faces of face ", iFace, "--");
     for (auto face : m_faces[iFace].Neighbors)
     {
-        utils::logln("Neighboring face ", i++, ": ", face);
+        utils::message("Neighboring face ", i++, ": ", face);
     }
     std::cout << std::endl;
 }
@@ -164,14 +164,14 @@ void TMesh::print_neighboring_faces_of_vertex(IndexType iVertex) const
     assert(iVertex < face_count());
 
     auto& faceStartIndex= m_vertices[iVertex].FaceIndex; 
-    utils::logln("--Neighboring faces of vertex ", iVertex, "--");
+    utils::message("--Neighboring faces of vertex ", iVertex, "--");
     int i= 0; 
-    utils::logln("Neighboring face ", i++, ": ", faceStartIndex);
+    utils::message("Neighboring face ", i++, ": ", faceStartIndex);
     IndexType localVertexIndex= local_index(iVertex, faceStartIndex);
     IndexType currentFaceIndex= m_faces[faceStartIndex].Neighbors[(localVertexIndex+1)%3];
     while (currentFaceIndex!=faceStartIndex)
     {
-        utils::logln("Neighboring face ", i++, ": ", currentFaceIndex);
+        utils::message("Neighboring face ", i++, ": ", currentFaceIndex);
         localVertexIndex= local_index(iVertex, currentFaceIndex);
         currentFaceIndex= m_faces[currentFaceIndex].Neighbors[(localVertexIndex+1)%3];
     } 
@@ -330,9 +330,28 @@ void TMesh::heat_diffusion(IndexType iVertex, ScalarType deltaTime)
     m_values[iVertex]+= deltaTime * laplacian(iVertex); 
 }
 
-void TMesh::triangle_split(Point p, IndexType iFace)
+void TMesh::insert_vertex(const Point &p)
 {
-    auto& face= m_faces[iFace]; 
+    triangle_split(p, find_triangle(p));
+}
+
+int TMesh::find_triangle(const Point &p) const 
+{
+    for (int i= 0; i < m_faces.size(); ++i)
+    {
+        auto face= m_faces[i];
+        if (within_abc(Vertex(p), m_vertices[face[0]], m_vertices[face[1]], m_vertices[face[2]]))
+        {
+            return i;
+        }
+    }
+    
+    return -1;
+}
+
+void TMesh::triangle_split(const Point& p, IndexType iFace)
+{
+    auto face= m_faces[iFace]; 
 
     // We are just adding the vertex at the end of the list of all vertices. Its index correspond to the number of vertices already listed in the mesh.   
     int newVertexIndex= vertex_count(); 
@@ -346,21 +365,112 @@ void TMesh::triangle_split(Point p, IndexType iFace)
 
     // Creating the two new triangle faces.
     Face newFace0; 
-    newFace0.vertices(face.Vertices[1], face.Vertices[2], newVertexIndex);
-    newFace0.neighbors(newF1Index, iFace, face.Neighbors[0]);
+    newFace0.vertices(face[1], face[2], newVertexIndex);
+    newFace0.neighbors(newF1Index, iFace, face(0));
 
     Face newFace1;
-    newFace1.vertices(face.Vertices[2], face.Vertices[0], newVertexIndex);
-    newFace1.neighbors(iFace, face.Neighbors[0], face.Neighbors[1]);
+    newFace1.vertices(face[2], face[0], newVertexIndex);
+    newFace1.neighbors(iFace, newF0Index, face(1));
+
+    for (IndexType i= 0; i < 3; ++i)
+    {
+        if (m_faces[face(0)](i) == iFace)
+        {
+            m_faces[face(0)](i)= newF0Index;
+            break;
+        }
+    }
+
+    for (IndexType i= 0; i < 3; ++i)
+    {
+        if (m_faces[face(1)](i) == iFace)
+        {
+            m_faces[face(1)](i)= newF1Index;
+            break;
+        }
+    }
 
     // Adding  them to the structure.
-    m_faces.push_back(newFace0);
-    m_faces.push_back(newFace1);
+    m_faces.emplace_back(newFace0);
+    m_faces.emplace_back(newFace1);
+
+    m_vertices[m_faces[iFace][2]].FaceIndex= newF0Index;
 
     // Modifying the original triangle face.
-    face.Vertices[2]= newVertexIndex;
-    face.Neighbors[0]= newF0Index;
-    face.Neighbors[1]= newF1Index;
+    m_faces[iFace][2]= newVertexIndex;
+    m_faces[iFace](0)= newF0Index;
+    m_faces[iFace](1)= newF1Index;
+
+    integrity_check();
+}
+
+void TMesh::edge_split(const Point &p, IndexType iFace1, IndexType iFace2)
+{
+    auto face1= m_faces[iFace1];  
+    auto face2= m_faces[iFace2];
+
+    int newVertexIndex= vertex_count();
+    m_vertices.emplace_back(p, iFace1);
+
+    IndexType edgeIndexF1; 
+    for (const auto& [i, n] : utils::enumerate(face1.Neighbors))
+    {
+        if (n == iFace2)
+        {
+            edgeIndexF1= i;
+            break;
+        }
+    }
+
+    IndexType edgeIndexF2; 
+    for (const auto& [i, n] : utils::enumerate(face2.Neighbors))
+    {
+        if (n == iFace1)
+        {
+            edgeIndexF2= i;
+            break;
+        }
+    }
+
+    int newFaceF1Index= face_count();
+    int newFaceF2Index= face_count() + 1;
+
+    Face newFaceF1;
+    newFaceF1.vertices(face1[edgeIndexF1], face1[(edgeIndexF1 + 1) % 3], newVertexIndex);
+    newFaceF1.neighbors(iFace2, iFace1, face1((edgeIndexF1 - 2) % 3));
+    m_faces.emplace_back(newFaceF1);
+
+    m_vertices[face1[(edgeIndexF1 + 1) % 3]].FaceIndex= newFaceF1Index; 
+
+    Face newFaceF2;
+    newFaceF2.vertices(face2[edgeIndexF2], face2[(edgeIndexF2 + 1) % 3], newVertexIndex);
+    newFaceF2.neighbors(iFace1, iFace2, face2((edgeIndexF2 - 2) % 3));
+    m_faces.emplace_back(newFaceF2);
+
+    m_vertices[face2[(edgeIndexF2 + 1) % 3]].FaceIndex= newFaceF2Index; 
+
+    for (int i= 0; i < 3; ++i)
+    {
+        if (m_faces[face1((edgeIndexF1 - 2) % 3)](i) == iFace1)
+        {
+            m_faces[face1((edgeIndexF1 - 2) % 3)](i)= newFaceF1Index;
+        }
+    }
+
+    for (int i= 0; i < 3; ++i)
+    {
+        if (m_faces[face1((edgeIndexF2 - 2) % 3)](i) == iFace2)
+        {
+            m_faces[face1((edgeIndexF2 - 2) % 3)](i)= newFaceF2Index;
+        }
+    } 
+
+    m_faces[iFace1][(edgeIndexF1 + 1) % 3]= newVertexIndex;
+    m_faces[iFace1]((edgeIndexF1 - 2) % 3)= newFaceF1Index;
+    m_faces[iFace2][(edgeIndexF2 + 1) % 3]= newVertexIndex;
+    m_faces[iFace2]((edgeIndexF2 - 2) % 3)= newFaceF2Index;
+
+    integrity_check();
 }
 
 ScalarType TMesh::laplacian(IndexType iVertex)
@@ -431,10 +541,17 @@ void TMesh::integrity_check() const
 {
     for (IndexType i= 0; i<m_vertices.size(); ++i)
     {
-        auto face= m_faces[m_vertices[i].FaceIndex];
-        assert(face.Vertices[0]==i ||
-                face.Vertices[1]==i ||
-                face.Vertices[2]==i);  
+        int iFace= m_vertices[i].FaceIndex;
+        auto face= m_faces[iFace];
+        assert(face[0]==i || face[1]==i || face[2]==i);  
+
+        for (IndexType j= 0; j < 3; ++j)
+        {
+            auto neighbor= m_faces[face(j)];
+            assert(neighbor(0)==iFace || neighbor(1)==iFace || neighbor(2)==iFace);
+        }
     }
+    
+    utils::status("Integrity_check passed");
 }
 } // namespace gam

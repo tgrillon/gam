@@ -29,22 +29,31 @@ auto enumerate(const auto& data) {
 }
 
 template<typename ...Args>
-void log(Args && ...args)
+void print(Args && ...args)
 {
   (std::cout << ... << args);
 }
 
 template<typename ...Args>
-void logln(Args && ...args)
+void message(Args && ...args)
 {
   (std::cout << ... << args);
   std::cout << '\n';
 }
 
 template<typename ...Args>
+void status(Args && ...args)
+{
+  std::cout << "-- ";
+  (std::cout << ... << args);
+  std::cout << " --\n";
+}
+
+template<typename ...Args>
 void error(Args && ...args)
 {
+  std::cerr << "!! ";
   (std::cerr << ... << args);
-  std::cout << std::endl;
+  std::cout << "!! " << std::endl;
 }
 } // namespace utils

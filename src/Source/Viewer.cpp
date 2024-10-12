@@ -60,13 +60,24 @@ Viewer::Viewer() : App(1024, 640), m_framebuffer(window_width(), window_height()
 
 int Viewer::init_any()
 {
-    m_tmesh.load_off("/queen.off");
+    m_tmesh.load_off("/cube.off");
     m_tmesh.vertex_value(0, 100);
     // m_tmesh.vertex_value(1, -100);
     m_tmesh.smooth_normals();
     m_tmesh.curvature();
-    m_tmesh.save_obj("/queen.obj", true);
-    m_obj_file= "/queen.obj";
+    int resolution= 10;
+    double angleStep= 2 * M_PI / resolution;
+    // m_tmesh.insert_vertex({1.0/3, 2.0/3, 0.0});
+    // for (int i= 0; i < resolution; ++i)
+    // {
+    //     double theta= angleStep * i;
+    //     m_tmesh.insert_vertex({0.5+0.35*cos(theta), 0.5+0.35*sin(theta), 0.});
+    // }
+
+    m_tmesh.edge_split({0.5, 0.5, 0.0}, 0, 1);
+    m_obj_file= "/cube.obj";
+    m_tmesh.save_obj(m_obj_file, true);
+
     m_object= read_mesh(std::string(OBJ_DIR) + m_obj_file);
 
     Point pmin, pmax; 
@@ -133,6 +144,18 @@ int Viewer::render_any()
         {
             clear_key_state(SDLK_n);
             m_show_normals= !m_show_normals; 
+        }
+
+        if (key_state(SDLK_e)) 
+        {
+            clear_key_state(SDLK_e);
+            m_show_edges= !m_show_edges; 
+        }
+
+        if (key_state(SDLK_f)) 
+        {
+            clear_key_state(SDLK_f);
+            m_show_faces= !m_show_faces; 
         }
 
         if (key_state(SDLK_k)) 
@@ -215,8 +238,9 @@ int Viewer::render_any()
     else if (m_show_faces)
     {
         glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(2.0, 1.0); 
+        glPolygonOffset(1.0, 1.0); 
         glDepthFunc(GL_LESS);
+        
         m_object.draw(m_program, true, true, true, false, false);
         glDisable(GL_POLYGON_OFFSET_FILL); 
     }
@@ -229,7 +253,7 @@ int Viewer::render_any()
         program_uniform(m_program_edges, "uMvpMatrix", mvp);
         GLint location= glGetUniformLocation(m_program_edges, "uEdgeColor");
         glUniform4fv(location, 1, &m_edges_color[0]);
-
+        
         m_object.draw(m_program_edges, true, false, false, false, false);
     }
 
@@ -300,9 +324,9 @@ int Viewer::render_ui()
         ImGui::SeparatorText("SCENE");
 
         // ImGui::InputText("Obj name", );
-        ImGui::Checkbox("Show normals", &m_show_normals);
-        ImGui::Checkbox("Normal color", &m_show_normal_color);
-        if (ImGui::Checkbox("Curvature", &m_show_curvature))
+        ImGui::Checkbox("Show normals (n)", &m_show_normals);
+        ImGui::Checkbox("Normal color (m)", &m_show_normal_color);
+        if (ImGui::Checkbox("Curvature (w)", &m_show_curvature))
         {
             if (m_show_heat_diffusion)
             {
@@ -312,7 +336,7 @@ int Viewer::render_ui()
                 m_show_heat_diffusion= false; 
             }
         }
-        if (ImGui::Checkbox("Heat diffusion", &m_show_heat_diffusion))
+        if (ImGui::Checkbox("Heat diffusion (h)", &m_show_heat_diffusion))
         {
             if (m_show_curvature)
             {
@@ -322,10 +346,10 @@ int Viewer::render_ui()
                 m_show_curvature= false; 
             }
         }
-        ImGui::Checkbox("Smooth normal", &m_show_smooth_normal);
-        ImGui::Checkbox("Show edges", &m_show_edges);
+        ImGui::Checkbox("Smooth normal (k)", &m_show_smooth_normal);
+        ImGui::Checkbox("Show edges (e)", &m_show_edges);
         ImGui::SameLine();
-        ImGui::Checkbox("Show faces", &m_show_faces);
+        ImGui::Checkbox("Show faces (f)", &m_show_faces);
         ImGui::SliderFloat("Edges width", &m_line_width, 1, 10, "%.2f");
         ImGui::SeparatorText("COLOR");
         ImGui::ColorPicker3("Background", &m_clear_color[0]);
@@ -342,7 +366,7 @@ int Viewer::render_ui()
         ImGui::Text("gpu : %i ms %i us", gpums, gpuus);
         ImGui::Text("total : %.2f ms", delta_time());
         ImGui::SeparatorText("GEOMETRY");
-        ImGui::Text("#vertices : %i", m_object.vertex_count());
+        ImGui::Text("#vertices : %i", m_object.vertex_count() / 3);
         ImGui::Text("#triangles : %i", m_object.triangle_count());
         ImGui::End();
     }

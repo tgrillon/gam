@@ -50,7 +50,7 @@ std::ostream &operator<<(std::ostream &out, const Vector &V)
     return out;
 }
 
-bool within_abc(const Point &p, const Point &a, const Point &b, const Point &c)
+bool within_abc(const Vertex &p, const Vertex &a, const Vertex &b, const Vertex &c)
 {
     Vector ab(a, b);
     Vector ac(a, c);
@@ -230,6 +230,30 @@ void Face::neighbors(int n0, int n1, int n2)
     Neighbors[0]= n0; 
     Neighbors[1]= n1; 
     Neighbors[2]= n2; 
+}
+
+int& Face::operator()(int i) 
+{
+    assert(i >= 0 && i < 3);
+    return Neighbors[i];
+}
+
+int Face::operator()(int i) const
+{
+    assert(i >= 0 && i < 3);
+    return Neighbors[i];
+}
+
+int& Face::operator[](int i) 
+{
+    assert(i >= 0 && i < 3);
+    return Vertices[i];
+}
+
+int Face::operator[](int i) const
+{
+    assert(i >= 0 && i < 3);
+    return Vertices[i];
 }
 
 } // namespace gam

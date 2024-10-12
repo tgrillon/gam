@@ -39,8 +39,10 @@ private:
   Framebuffer m_framebuffer; 
 
   float m_clear_color[3]{0.678f, 0.686f, 0.878f}; 
-  float m_mesh_color[4]{1.0f, 1.0f, 1.0f, 1.0f}; 
+  float m_mesh_color[4]{1.0f, 0.0f, 0.0f, 1.0f}; 
   float m_edges_color[4]{1.0f, 1.0f, 0.0f, 1.0f}; 
+  
+  float m_line_width{1.0};
 
   bool m_show_style_editor{false};
   bool m_show_ui {true};
@@ -56,5 +58,4 @@ private:
   bool m_show_faces{true};
   bool m_show_edges{false};
 
-  float m_line_width{2.0};
 };

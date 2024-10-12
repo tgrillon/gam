@@ -56,6 +56,16 @@ struct Face
   void vertices(int v0, int v1, int v2);
   void neighbors(int n0, int n1, int n2);
 
+  //! Get neighbor of index i.
+  int operator()(int i) const;
+  int& operator()(int i);
+  //! Get neighbor of index i.
+
+  //! Get vertex of index i.
+  int operator[](int i) const;
+  int& operator[](int i);
+  //! Get vertex of index i.
+
   int Vertices[3]  { -1, -1, -1 };
   int Neighbors[3] { -1, -1, -1 };
 };
@@ -126,5 +136,5 @@ struct Vector
   ScalarType X, Y, Z;
 };
 
-bool within_abc(const Point& p, const Point& a, const Point& b, const Point& c);
+bool within_abc(const Vertex& p, const Vertex& a, const Vertex& b, const Vertex& c);
 } // namespace gam
