@@ -31,6 +31,7 @@ private:
 
   GLuint m_program;
   GLuint m_program_edges;
+  GLuint m_program_points;
   GLuint m_heat_diffusion_tex;
 
   std::string m_obj_file;
@@ -41,8 +42,10 @@ private:
   float m_clear_color[3]{0.678f, 0.686f, 0.878f}; 
   float m_mesh_color[4]{1.0f, 0.0f, 0.0f, 1.0f}; 
   float m_edges_color[4]{1.0f, 1.0f, 0.0f, 1.0f}; 
+  float m_points_color[4]{0.0f, 0.0f, 1.0f, 1.0f};
   
-  float m_line_width{1.0};
+  float m_size_edge{1.0f};
+  float m_size_point{15.0f};
 
   bool m_show_style_editor{false};
   bool m_show_ui {true};
@@ -57,5 +60,6 @@ private:
 
   bool m_show_faces{true};
   bool m_show_edges{false};
+  bool m_show_points{false};
 
 };

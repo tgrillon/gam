@@ -79,18 +79,19 @@ public:
     //! Calculate the vertex value for the heat diffusion. 
     void heat_diffusion(IndexType iVertex, ScalarType deltaTime);
 
+    //! Insert a vertex of position p.
     void insert_vertex(const Point& p);
 
-
-    //! Splits an edge into two by insertion of a new vertex that is located at the position provided in parameter. The incident faces are also divided into two faces.
-    void edge_split(const Point& p, IndexType iFace1, IndexType iFace2);
+    //! Flips the edge opposed to the vertex of local index iEdge within the face of index iFace. 
+    void flip_edge(IndexType iFace, IndexType iEdge);
 
 private: 
-    //! Find the triangle that contains the point p.
-    int find_triangle(const Point& p) const;
 
     //! Splits a triangle face into three by insertion of a new vertex that is located at the position provided in parameter.
     void triangle_split(const Point& p, IndexType iFace); 
+
+    //! Splits an edge into two by insertion of a new vertex that is located at the position provided in parameter. The incident faces are also divided into two faces.
+    void edge_split(const Point& p, IndexType iFace, IndexType iEdge);
 
     //! Calculate cotangente Laplacian value at vertex of index iVertex.
     ScalarType laplacian(IndexType iVertex);

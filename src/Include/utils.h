@@ -44,15 +44,23 @@ void message(Args && ...args)
 template<typename ...Args>
 void status(Args && ...args)
 {
-  std::cout << "-- ";
+  std::cout << "-- [STATUS] ";
   (std::cout << ... << args);
   std::cout << " --\n";
 }
 
 template<typename ...Args>
+void debug(Args && ...args)
+{
+  std::cout << "## [DEBUG] ";
+  (std::cout << ... << args);
+  std::cout << " ##\n";
+}
+
+template<typename ...Args>
 void error(Args && ...args)
 {
-  std::cerr << "!! ";
+  std::cerr << "!! [ERROR] ";
   (std::cerr << ... << args);
   std::cout << "!! " << std::endl;
 }

@@ -58,13 +58,17 @@ struct Face
 
   //! Get neighbor of index i.
   int operator()(int i) const;
-  int& operator()(int i);
   //! Get neighbor of index i.
+  int& operator()(int i);
 
   //! Get vertex of index i.
   int operator[](int i) const;
-  int& operator[](int i);
   //! Get vertex of index i.
+  int& operator[](int i);
+
+  void change_neighbor(IndexType iFace, IndexType value);
+
+  int get_edge(IndexType iFace);
 
   int Vertices[3]  { -1, -1, -1 };
   int Neighbors[3] { -1, -1, -1 };
@@ -136,5 +140,9 @@ struct Vector
   ScalarType X, Y, Z;
 };
 
-bool within_abc(const Vertex& p, const Vertex& a, const Vertex& b, const Vertex& c);
+//! Orientation predicate : returns a positive value if the three given points are oriented counter-clockwise, negative if they are oriented clockwise or zero if they are aligned.
+int orientation(const Point& a, const Point& b, const Point& c);
+
+//! Returns a positive value if p is located inside the triangle defined by the vertices (a, b, c), negative if it is located outside or zero if it is located on the boundary. 
+std::pair<bool, int> in_triangle(const Vertex& p, const Vertex& a, const Vertex& b, const Vertex& c);
 } // namespace gam

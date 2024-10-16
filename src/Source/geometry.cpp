@@ -50,28 +50,26 @@ std::ostream &operator<<(std::ostream &out, const Vector &V)
     return out;
 }
 
-bool within_abc(const Vertex &p, const Vertex &a, const Vertex &b, const Vertex &c)
+int orientation(const Point &p, const Point &q, const Point &r)
 {
-    Vector ab(a, b);
-    Vector ac(a, c);
-    Vector bc(b, c);
+    ScalarType s = (q.X - p.X) * (r.Y - p.Y) - (q.Y - p.Y) * (r.X - p.X);
 
-    Vector ap(a, p);
-    Vector cap1= ab.cross(ap); 
-    Vector cap2= ap.cross(ac); 
-    ScalarType d1= cap1.dot(cap2); 
+    return s > 0.0 ? 1 : s < 0.0 ? -1 : 0;
+}
 
-    Vector bp(b, p);
-    Vector cbp1= bc.cross(bp); 
-    Vector cbp2= bp.cross(-ab); 
-    ScalarType d2= cbp1.dot(cbp2);
+std::pair<bool, int> in_triangle(const Vertex &p, const Vertex &a, const Vertex &b, const Vertex &c)
+{
+    int d1 = orientation(Vertex::as_point(p), Vertex::as_point(a), Vertex::as_point(b));
+    int d2 = orientation(Vertex::as_point(p), Vertex::as_point(b), Vertex::as_point(c));
+    int d3 = orientation(Vertex::as_point(p), Vertex::as_point(c), Vertex::as_point(a));
 
-    Vector cp(c, p);
-    Vector ccp1= -ac.cross(cp); 
-    Vector ccp2= cp.cross(-bc); 
-    ScalarType d3= ccp1.dot(ccp2); 
+    if (d1 == 0) return { true, 2 };
+    if (d2 == 0) return { true, 0 };
+    if (d3 == 0) return { true, 1 };
 
-    return d1 * d2 > 0 && d1 * d3 > 0 && d2 * d3 > 0;
+    if (d1 == 1 && d2 == 1 && d3 == 1) return { true, -1 }; 
+    
+    return { false, -1 }; 
 }
 
 std::ostream &operator<<(std::ostream &out, const Vertex &V)
@@ -248,6 +246,28 @@ int& Face::operator[](int i)
 {
     assert(i >= 0 && i < 3);
     return Vertices[i];
+}
+
+void Face::change_neighbor(IndexType iFace, IndexType value)
+{
+    for (auto& n : Neighbors)
+    {
+        if (n == iFace)
+        {
+            n = value; 
+            break;
+        }
+    }
+}
+
+int Face::get_edge(IndexType iFace)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        if (Neighbors[i] == iFace) return i;
+    }
+
+    return -1;
 }
 
 int Face::operator[](int i) const

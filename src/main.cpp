@@ -48,7 +48,7 @@ std::string outputFile= "/" + filename + ".obj";
   // auto[c, r]= (gam::circumcircle({-8.4, 4.66, 0.0}, {-7.0, 0.0, 0.0}, {-6.77, 3.32, 0.0}));
   // utils::message("Center: ", c, " Radius: ", r);
 
-  utils::message("Within ABC: ", (gam::within_abc({-9.56315,4.26221, 0.0}, {-8.68194,4.61808, 0.0}, {-9.26659,3.55047, 0.0}, {-5.80955,2.44896, 0.0}) ? "YES" : "NO"));
+  utils::message("Within ABC: ", (gam::in_triangle({-9.56315,4.26221, 0.0}, {-8.68194,4.61808, 0.0}, {-9.26659,3.55047, 0.0}, {-5.80955,2.44896, 0.0}) ? "YES" : "NO"));
 #endif
 
 }
