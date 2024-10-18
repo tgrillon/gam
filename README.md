@@ -90,7 +90,7 @@ Dans le fichier `Source/main.cpp` :
 
 Un maillage triangulaire (`TMesh`) peut se définir comme un ensemble de faces et de sommets. 
 
-Chaque sommet (`Vertex`) stocke sa position (`X, Y et Z`) ainsi que l'indice d'une de ses faces voisines (`FaceIndex`).
+Chaque sommet (`Vertex`) stocke sa position (`x, Y et Z`) ainsi que l'indice d'une de ses faces voisines (`i_face`).
 
 Chaque face stocke l'indice de ces trois sommets (`Vertices`), ainsi que l'indice de ses trois faces voisines (`Neighbors`).  
 

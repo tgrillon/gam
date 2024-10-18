@@ -60,85 +60,88 @@ Viewer::Viewer() : App(1024, 640), m_framebuffer(window_width(), window_height()
 
 int Viewer::init_any()
 {
-    m_tmesh.load_off("/cube.off");
-    m_tmesh.vertex_value(0, 100);
-    m_tmesh.smooth_normals();
-    m_tmesh.curvature();
-    // int resolution = 15;
-    // double angleStep = 2 * M_PI / resolution;
-    // for (int i= 0; i < resolution; ++i)
-    // {
-    //     double theta= angleStep * i;
-    //     m_tmesh.insert_vertex({0.5+0.35*cos(theta), 0.5+0.35*sin(theta), 0.});
-    // }
+    m_grid = make_grid(5);
 
-    // m_tmesh.flip_edge(0, 2);
-    // m_tmesh.insert_vertex({0.66, 0.33, 0.0});
-    // m_tmesh.insert_vertex({0.6, 0.6, 0.0});
-    m_tmesh.insert_vertex({0.5, 1.0, 0.5});
-    m_obj_file = "/cube.obj";
-    m_tmesh.save_obj(m_obj_file, true);
+    init_laplacian_demo();
+    init_delaunay_demo();
 
-    m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+    if (init_programs() < 0)
+    {
+        utils::error("in [init_progam]");
+        return -1;
+    }
 
-    Point pmin, pmax;
-    m_object.bounds(pmin, pmax);
-    m_camera.lookat(pmin, pmax);
+    return 0;
+}
+
+int Viewer::init_programs()
+{
+    m_program = read_program(std::string(SHADER_DIR) + "/base.glsl");
+    if (program_print_errors(m_program) < 0)
+    {
+        utils::error("in [read_program] for", std::string(SHADER_DIR) + "/base.glsl");
+        return -1;
+    }
+
+    m_program_edges = read_program(std::string(SHADER_DIR) + "/edges.glsl");
+    if (program_print_errors(m_program_edges) < 0)
+    {
+        utils::error("in [read_program] for", std::string(SHADER_DIR) + "/edges.glsl");
+        return -1;
+    }
+
+    m_program_points = read_program(std::string(SHADER_DIR) + "/points.glsl");
+    if (program_print_errors(m_program_points) < 0)
+    {
+        utils::error("in [read_program] for", std::string(SHADER_DIR) + "/points.glsl");
+        return -1;
+    }
+
+    return 0;
+}
+
+int Viewer::init_laplacian_demo()
+{
+    m_laplacian.load_off("/cube.off");
+    m_laplacian.vertex_value(0, 100);
+    m_laplacian.smooth_normals();
+    m_laplacian.curvature();
+    m_object = m_laplacian.mesh();
+
+    if (m_laplacian_demo)
+    {
+        center_camera(m_object);
+    }
 
     m_heat_diffusion_tex = read_texture(0, std::string(DATA_DIR) + "/gradient.png");
 
-    m_program = read_program(std::string(SHADER_DIR) + "/base.glsl");
-    program_print_errors(m_program);
+    return 0;
+}
 
-    m_program_edges = read_program(std::string(SHADER_DIR) + "/edges.glsl");
-    program_print_errors(m_program_edges);
+int Viewer::init_delaunay_demo()
+{
+    // auto points = utils::read_point_set("/blue_noise.txt", 100., 100.);
+    std::vector<Point> points;
+    points.emplace_back(1.0, .0, .0);
+    points.emplace_back(1.0, 1.0, .0);
+    points.emplace_back(0.0, 1.0, .0);
+    points.emplace_back(.0, .0, .0);
+    points.emplace_back(.0, 2.0, .0);
 
-    m_program_points = read_program(std::string(SHADER_DIR) + "/points.glsl");
-    program_print_errors(m_program_points);
+    m_delaunay.insert_vertices(points);
+
+    m_blue_noise = m_delaunay.mesh();
+
+    if (m_delaunay_demo)
+    {
+        center_camera(m_blue_noise);
+    }
 
     return 0;
 }
 
-int Viewer::render()
+int Viewer::handle_events()
 {
-    if (render_ui() < 0)
-    {
-        utils::error("Error with the UI rendering!");
-        return -1;
-    }
-
-    m_framebuffer.bind();
-    glClearColor(m_clear_color[0], m_clear_color[1], m_clear_color[2], 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-    glEnable(GL_DEPTH_TEST);
-
-    if (render_any() < 0)
-    {
-        utils::error("Error with the geometry rendering!");
-        return -1;
-    }
-
-    m_framebuffer.unbind();
-
-    return 1;
-}
-
-int Viewer::quit_any()
-{
-    m_repere.release();
-    m_object.release();
-    glDeleteTextures(1, &m_heat_diffusion_tex);
-    release_program(m_program);
-    release_program(m_program_edges);
-    return 0;
-}
-
-int Viewer::render_any()
-{
-    glUseProgram(m_program);
-
-    Transform tf = Scale(m_camera.radius() * 0.1);
-
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
     if (!io.WantCaptureKeyboard && !io.WantCaptureMouse)
@@ -185,9 +188,8 @@ int Viewer::render_any()
             clear_key_state(SDLK_w);
             if (m_show_heat_diffusion)
             {
-                m_tmesh.curvature();
-                m_tmesh.save_obj(m_obj_file, true);
-                m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+                m_laplacian.curvature();
+                m_object = m_laplacian.mesh(true);
                 m_show_heat_diffusion = false;
             }
             m_show_curvature = !m_show_curvature;
@@ -198,25 +200,79 @@ int Viewer::render_any()
             clear_key_state(SDLK_h);
             if (m_show_curvature)
             {
-                m_tmesh.reset_values();
-                m_tmesh.save_obj(m_obj_file);
-                m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+                m_laplacian.reset_values();
+                m_object = m_laplacian.mesh(false);
                 m_show_curvature = false;
             }
             m_show_heat_diffusion = !m_show_heat_diffusion;
         }
     }
 
+    return 0;
+}
+
+int Viewer::render()
+{
+    if (render_ui() < 0)
+    {
+        utils::error("in [render_ui]");
+        return -1;
+    }
+
+    m_framebuffer.bind();
+    glClearColor(m_clear_color[0], m_clear_color[1], m_clear_color[2], 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+    glEnable(GL_DEPTH_TEST);
+
+    if (render_any() < 0)
+    {
+        utils::error("in [render_any]");
+        return -1;
+    }
+
+    m_framebuffer.unbind();
+
+    return 1;
+}
+
+int Viewer::quit_any()
+{
+    m_grid.release();
+    m_repere.release();
+    m_object.release();
+    m_blue_noise.release();
+    glDeleteTextures(1, &m_heat_diffusion_tex);
+    release_program(m_program);
+    release_program(m_program_edges);
+    return 0;
+}
+
+int Viewer::render_any()
+{
+    if (handle_events() < 0)
+    {
+        utils::error("in [handle_events]");
+    }
+
+    if (m_laplacian_demo)
+        render_laplacian_demo();
+    else if (m_delaunay_demo)
+        render_delaunay_demo();
+
+    return 0;
+}
+
+int Viewer::render_laplacian_demo()
+{
     Transform model = Identity();
     Transform view = m_camera.view();
     Transform projection = m_camera.projection();
 
-    // . composer les transformations : model, view et projection
     Transform mvp = projection * view * model;
     Transform mv = model * view;
 
-    // . parametrer le shader program :
-    //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+    glUseProgram(m_program);
+
     program_uniform(m_program, "uMvpMatrix", mvp);
     program_uniform(m_program, "uMvMatrix", mv);
     program_uniform(m_program, "uNormalMatrix", mv.normal());
@@ -233,15 +289,14 @@ int Viewer::render_any()
     if (m_show_normals)
     {
         DrawParam param;
-        param.model(Identity()).view(view).projection(projection);
+        param.model(model).view(view).projection(projection);
         param.debug_normals(0.02 * m_camera.radius());
         param.draw(m_object);
     }
     else if (m_show_heat_diffusion)
     {
-        m_tmesh.heat_diffusion(0.00001);
-        m_tmesh.save_obj(m_obj_file);
-        m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+        m_laplacian.heat_diffusion(0.00001);
+        m_object = m_laplacian.mesh(false);
         program_use_texture(m_program, "uHeatDiffusionTex", 0, m_heat_diffusion_tex);
         m_object.draw(m_program, true, true, true, false, false);
     }
@@ -264,6 +319,8 @@ int Viewer::render_any()
         GLint location = glGetUniformLocation(m_program_edges, "uEdgeColor");
         glUniform4fv(location, 1, &m_edges_color[0]);
 
+        m_object.bind_vao();
+
         m_object.draw(m_program_edges, true, false, false, false, false);
     }
 
@@ -276,8 +333,136 @@ int Viewer::render_any()
         GLint location = glGetUniformLocation(m_program_points, "uPointColor");
         glUniform4fv(location, 1, &m_points_color[0]);
 
+        m_object.bind_vao();
+
         glDrawArrays(GL_POINTS, 0, m_object.vertex_count());
     }
+
+    return 0;
+}
+
+int Viewer::render_delaunay_demo()
+{
+    Transform model = Identity();
+    Transform view = m_camera.view();
+    Transform projection = m_camera.projection();
+
+    Transform mvp = projection * view * model;
+    Transform mv = model * view;
+
+    glUseProgram(m_program);
+
+    program_uniform(m_program, "uMvpMatrix", mvp);
+    program_uniform(m_program, "uMvMatrix", mv);
+    program_uniform(m_program, "uNormalMatrix", mv.normal());
+
+    Point light = m_camera.position();
+    program_uniform(m_program, "uLight", view(light));
+    GLuint location = glGetUniformLocation(m_program, "uMeshColor");
+    glUniform4fv(location, 1, &m_mesh_color[0]);
+    if (m_blue_noise.triangle_count() > 0)
+    {
+        if (m_show_faces)
+        {
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(1.0, 1.0);
+            glDepthFunc(GL_LESS);
+
+            m_blue_noise.draw(m_program, true, false, false, false, false);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+        }
+        if (m_show_edges)
+        {
+            glUseProgram(m_program_edges);
+
+            glLineWidth(m_size_edge);
+            program_uniform(m_program_edges, "uMvpMatrix", mvp);
+            GLint location = glGetUniformLocation(m_program_edges, "uEdgeColor");
+            glUniform4fv(location, 1, &m_edges_color[0]);
+
+            m_blue_noise.draw(m_program_edges, true, false, false, false, false);
+        }
+    }
+
+    if (m_show_points)
+    {
+        glUseProgram(m_program_points);
+
+        program_uniform(m_program_points, "uMvpMatrix", mvp);
+        program_uniform(m_program_points, "uPointSize", m_size_point);
+        GLint location = glGetUniformLocation(m_program_points, "uPointColor");
+        glUniform4fv(location, 1, &m_points_color[0]);
+
+        m_blue_noise.bind_vao();
+
+        glDrawArrays(GL_POINTS, 0, m_blue_noise.vertex_count());
+    }
+
+    return 0;
+}
+
+int Viewer::render_laplacian_params()
+{
+    ImGui::SeparatorText("LOAD MESH");
+    ImGui::InputTextWithHint("Off name", "queen", &m_file_name);
+    if (ImGui::Button("Load mesh", ImVec2(100, 25)))
+    {
+        m_laplacian.load_off("/" + m_file_name + ".off");
+        m_obj_file = "/" + m_file_name + ".obj";
+        m_laplacian.vertex_value(0, 100);
+        m_laplacian.smooth_normals();
+        m_laplacian.curvature();
+        m_laplacian.save_obj(m_obj_file, true);
+        m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+
+        center_camera(m_object);
+    }
+    ImGui::SeparatorText("SCENE");
+
+    // ImGui::InputText("Obj name", );
+    ImGui::Checkbox("Show normals (n)", &m_show_normals);
+    ImGui::Checkbox("Normal color (m)", &m_show_normal_color);
+    if (ImGui::Checkbox("Curvature (w)", &m_show_curvature))
+    {
+        if (m_show_heat_diffusion)
+        {
+            m_laplacian.curvature();
+            m_laplacian.save_obj(m_obj_file, true);
+            m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+            m_show_heat_diffusion = false;
+        }
+    }
+    if (ImGui::Checkbox("Heat diffusion (h)", &m_show_heat_diffusion))
+    {
+        if (m_show_curvature)
+        {
+            m_laplacian.reset_values();
+            m_laplacian.save_obj(m_obj_file);
+            m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+            m_show_curvature = false;
+        }
+    }
+
+    return 0;
+}
+
+int Viewer::render_laplacian_stats()
+{
+    ImGui::Text("#vertices : %i", m_object.vertex_count());
+    ImGui::Text("#triangles : %i", m_object.triangle_count());
+
+    return 0;
+}
+
+int Viewer::render_delaunay_params()
+{
+    return 0;
+}
+
+int Viewer::render_delaunay_stats()
+{
+    ImGui::Text("#vertices : %i", m_blue_noise.vertex_count());
+    ImGui::Text("#triangles : %i", m_blue_noise.triangle_count());
 
     return 0;
 }
@@ -288,7 +473,7 @@ int Viewer::render_ui()
 
     if (render_menu_bar() < 0)
     {
-        utils::error("Error with the menu bar rendering!");
+        utils::error("in [render_menu_bar]");
         return -1;
     }
 
@@ -327,50 +512,18 @@ int Viewer::render_ui()
     if (m_show_ui)
     {
         ImGui::Begin("Parameters");
-        ImGui::SeparatorText("LOAD MESH");
-        ImGui::InputTextWithHint("Off name", "queen", &m_file_name);
-        if (ImGui::Button("Load mesh", ImVec2(100, 25)))
-        {
-            m_tmesh.load_off("/" + m_file_name + ".off");
-            m_obj_file = "/" + m_file_name + ".obj";
-            m_tmesh.vertex_value(0, 100);
-            m_tmesh.smooth_normals();
-            m_tmesh.curvature();
-            m_tmesh.save_obj(m_obj_file, true);
-            m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
 
-            Point pmin, pmax;
-            m_object.bounds(pmin, pmax);
-            m_camera.lookat(pmin, pmax);
-        }
-        ImGui::SeparatorText("SCENE");
+        render_demo_buttons();
 
-        // ImGui::InputText("Obj name", );
-        ImGui::Checkbox("Show normals (n)", &m_show_normals);
-        ImGui::Checkbox("Normal color (m)", &m_show_normal_color);
-        if (ImGui::Checkbox("Curvature (w)", &m_show_curvature))
-        {
-            if (m_show_heat_diffusion)
-            {
-                m_tmesh.curvature();
-                m_tmesh.save_obj(m_obj_file, true);
-                m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
-                m_show_heat_diffusion = false;
-            }
-        }
-        if (ImGui::Checkbox("Heat diffusion (h)", &m_show_heat_diffusion))
-        {
-            if (m_show_curvature)
-            {
-                m_tmesh.reset_values();
-                m_tmesh.save_obj(m_obj_file);
-                m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
-                m_show_curvature = false;
-            }
-        }
-        ImGui::Checkbox("Smooth normal (k)", &m_show_smooth_normal);
+        if (m_laplacian_demo)
+            render_laplacian_params();
+        else if (m_delaunay_demo)
+            render_delaunay_params();
+
+        // ImGui::Checkbox("Smooth normal (k)", &m_show_smooth_normal);
+        ImGui::SeparatorText("GLOBAL");
+        ImGui::Checkbox("Show vertices (v)", &m_show_points);
         ImGui::Checkbox("Show edges (e)", &m_show_edges);
-        ImGui::SameLine();
         ImGui::Checkbox("Show faces (f)", &m_show_faces);
         ImGui::SliderFloat("Edges size", &m_size_edge, 1, 10, "%.2f");
         ImGui::SliderFloat("Points size", &m_size_point, 1, 30, "%.2f");
@@ -390,8 +543,10 @@ int Viewer::render_ui()
         ImGui::Text("gpu : %i ms %i us", gpums, gpuus);
         ImGui::Text("total : %.2f ms", delta_time());
         ImGui::SeparatorText("GEOMETRY");
-        ImGui::Text("#vertices : %i", m_object.vertex_count() / 3);
-        ImGui::Text("#triangles : %i", m_object.triangle_count());
+        if (m_laplacian_demo)
+            render_laplacian_stats();
+        else if (m_delaunay_demo)
+            render_delaunay_stats();
         ImGui::End();
     }
 
@@ -403,6 +558,43 @@ int Viewer::render_ui()
     }
 
     ImGui::Render();
+
+    return 0;
+}
+
+int Viewer::render_demo_buttons()
+{
+    ImVec2 sz = ImVec2(-FLT_MIN, 45.0f);
+
+    //! Laplacian demo widget
+    ImGui::BeginDisabled(m_laplacian_demo);
+    if (ImGui::Button("Laplacian Demo", sz) && !m_laplacian_demo)
+    {
+        m_laplacian_demo = true;
+        m_delaunay_demo = false;
+
+        center_camera(m_object);
+    }
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+    {
+        ImGui::SetTooltip(!m_laplacian_demo ? "Activate Laplacian demo." : "Laplacian demo is active.");
+    }
+    ImGui::EndDisabled();
+
+    //! Delaunay demo widget
+    ImGui::BeginDisabled(m_delaunay_demo);
+    if (ImGui::Button("Delaunay Demo", sz) && !m_delaunay_demo)
+    {
+        m_laplacian_demo = false;
+        m_delaunay_demo = true;
+
+        center_camera(m_blue_noise);
+    }
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+    {
+        ImGui::SetTooltip(!m_delaunay_demo ? "Activate Delaunay triangulation demo." : "Delaunay triangulation demo is active.");
+    }
+    ImGui::EndDisabled();
 
     return 0;
 }

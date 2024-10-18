@@ -1,121 +1,135 @@
-#pragma once 
+#pragma once
 
-#include "geometry.h"
+#include "Geometry.h"
 
-namespace gam 
+namespace gam
 {
-//! Triangulated mesh. 
-class TMesh 
-{
-public:
-    TMesh()=default; 
-    TMesh(const std::vector<ScalarType>& values) : m_values(values) {} 
+    //! Triangulated mesh.
+    class TMesh
+    {
+    public:
+        TMesh() = default;
+        TMesh(const std::vector<ScalarType> &values) : m_values(values) {}
 
-    //! Set the vertex value at index i.
-    inline void vertex_value(IndexType iVertex, ScalarType v) { assert(iVertex < vertex_count()); m_values[iVertex]= v; }
+        Mesh mesh(bool curvature = true) const;
 
-    //! Set the values of all vertices.
-    inline void vertices_values(const std::vector<ScalarType>& values) { m_values= values; }
+        //! Set the vertex value at index i.
+        inline void vertex_value(IndexType i_vertex, ScalarType v)
+        {
+            assert(i_vertex < vertex_count());
+            m_values[i_vertex] = v;
+        }
 
-    //! Set vertices values to 0.
-    inline void reset_values() { m_values= std::vector<ScalarType>(vertex_count(), 0.); }
+        //! Set the values of all vertices.
+        inline void vertices_values(const std::vector<ScalarType> &values) { m_values = values; }
 
-    //! Get the vertex value at index i.
-    inline ScalarType vertex_value(IndexType iVertex) const { assert(iVertex < vertex_count()); return m_values[iVertex]; }
+        //! Set vertices values to 0.
+        inline void reset_values() { m_values = std::vector<ScalarType>(vertex_count(), 0.); }
 
-    //! Get the values of all vertices.
-    inline std::vector<ScalarType> vertices_values() const { return m_values; }
+        //! Get the vertex value at index i.
+        inline ScalarType vertex_value(IndexType i_vertex) const
+        {
+            assert(i_vertex < vertex_count());
+            return m_values[i_vertex];
+        }
 
-    //! Get the number of vertex of the mesh. 
-    inline IndexType vertex_count() const { return m_vertices.size(); }
-    
-    //! Get the number of face of the mesh.
-    inline IndexType face_count() const { return m_faces.size(); }
+        //! Get the values of all vertices.
+        inline std::vector<ScalarType> vertices_values() const { return m_values; }
 
-    //! Load and triangulate a mesh from an OFF file. 
-    void load_off(const std::string& OFFFile);
+        //! Get the number of vertex of the mesh.
+        inline IndexType vertex_count() const { return m_vertices.size(); }
 
-    //! Save the mesh as an .obj file. 
-    void save_obj(const std::string& OBJFile, bool useCurvature= false);
+        //! Get the number of face of the mesh.
+        inline IndexType face_count() const { return m_faces.size(); }
 
-    //! Get the local index for a vertex located on the face of index `iFace`.
-    IndexType local_index(IndexType iVertex, IndexType iFace) const;  
-    
-    //! Print the index of the neighboring faces of the face of index `iFace`. 
-    void print_neighboring_faces_of_face(IndexType iFace) const;
+        //! Load and triangulate a mesh from an OFF file.
+        void load_off(const std::string &off_file);
 
-    //! Print the index of the neighboring faces of the vertex of index `iVertex`. 
-    void print_neighboring_faces_of_vertex(IndexType iVertex) const;
+        //! Save the mesh as an .obj file.
+        void save_obj(const std::string &obj_file, bool use_curvature = false);
 
-    //! Get the index of the neighboring faces of a face.
-    std::vector<IndexType> neighboring_faces_of_face(IndexType iFace) const;
+        //! Get the local index for a vertex located on the face of index `i_face`.
+        IndexType local_index(IndexType i_vertex, IndexType i_face) const;
 
-    //! Get the index of the neighboring faces of a vertex.
-    std::vector<IndexType> neighboring_faces_of_vertex(IndexType iVertex) const;
+        //! Print the index of the neighboring faces of the face of index `i_face`.
+        void print_neighboring_faces_of_face(IndexType i_face) const;
 
-    //! Get the index of the neighboring vertices of a vertex.
-    std::vector<IndexType> neighboring_vertices_of_vertex(IndexType iVertex) const;
+        //! Print the index of the neighboring faces of the vertex of index `i_vertex`.
+        void print_neighboring_faces_of_vertex(IndexType i_vertex) const;
 
-    //! Calculate the area of the face of index iFace.
-    ScalarType face_area(IndexType iFace) const;
+        //! Get the index of the neighboring faces of a face.
+        std::vector<IndexType> neighboring_faces_of_face(IndexType i_face) const;
 
-    //! Calculate the area of the patch of surface corresponding to the vertex of index iVertex.
-    ScalarType patch_area(IndexType iVertex) const;
+        //! Get the index of the neighboring faces of a vertex.
+        std::vector<IndexType> neighboring_faces_of_vertex(IndexType i_vertex) const;
 
-    //! Calculate the Laplacian of a discrete function defined on the mesh.
-    void laplacian();
+        //! Get the index of the neighboring vertices of a vertex.
+        std::vector<IndexType> neighboring_vertices_of_vertex(IndexType i_vertex) const;
 
-    Vector face_normal(IndexType iFace) const;
+        //! Calculate the area of the face of index i_face.
+        ScalarType face_area(IndexType i_face) const;
 
-    //! Compute normal of each vertex of the mesh. 
-    void smooth_normals();
+        //! Calculate the area of the patch of surface corresponding to the vertex of index i_vertex.
+        ScalarType patch_area(IndexType i_vertex) const;
 
-    //! Compute curvature value at each vertex. 
-    void curvature();
+        //! Calculate the Laplacian of a discrete function defined on the mesh.
+        void laplacian();
 
-    //! Perform heat diffusion using the Laplacian equation. 
-    void heat_diffusion(ScalarType deltaTime);
+        Vector face_normal(IndexType i_face) const;
 
-    //! Calculate the vertex value for the heat diffusion. 
-    void heat_diffusion(IndexType iVertex, ScalarType deltaTime);
+        //! Compute normal of each vertex of the mesh.
+        void smooth_normals();
 
-    //! Insert a vertex of position p.
-    void insert_vertex(const Point& p);
+        //! Compute curvature value at each vertex.
+        void curvature();
 
-    //! Flips the edge opposed to the vertex of local index iEdge within the face of index iFace. 
-    void flip_edge(IndexType iFace, IndexType iEdge);
+        //! Perform heat diffusion using the Laplacian equation.
+        void heat_diffusion(ScalarType delta_time);
 
-private: 
+        //! Calculate the vertex value for the heat diffusion.
+        void heat_diffusion(IndexType i_vertex, ScalarType delta_time);
 
-    //! Splits a triangle face into three by insertion of a new vertex that is located at the position provided in parameter.
-    void triangle_split(const Point& p, IndexType iFace); 
+        //! Insert a vertex of position p.
+        void insert_vertex(const Point &p);
 
-    //! Splits an edge into two by insertion of a new vertex that is located at the position provided in parameter. The incident faces are also divided into two faces.
-    void edge_split(const Point& p, IndexType iFace, IndexType iEdge);
+        //! Flips the edge opposed to the vertex of local index i_edge within the face of index i_face.
+        void flip_edge(IndexType i_face, IndexType i_edge);
 
-    //! Calculate cotangente Laplacian value at vertex of index iVertex.
-    ScalarType laplacian(IndexType iVertex);
+        void insert_vertices(const std::vector<Point>& vertices);
 
-    //! Calculate the normal of a vertex using the cotangent Laplacian. 
-    Vector laplacian_vector(IndexType iVertex);
+        //! Clear the data structure.
+        void clear();
 
-    //! Checking the integrity of the mesh structure.
-    void integrity_check() const; 
+    private:
+        //! Splits a triangle face into three by insertion of a new vertex that is located at the position provided in parameter.
+        void triangle_split(const Point &p, IndexType i_face);
 
-private: 
-    //! Vertices of the mesh.
-    std::vector<Vertex> m_vertices;
+        //! Splits an edge into two by insertion of a new vertex that is located at the position provided in parameter. The incident faces are also divided into two faces.
+        void edge_split(const Point &p, IndexType i_face, IndexType i_edge);
 
-    //! Sewn-together faces of the mesh. 
-    std::vector<Face> m_faces;
+        //! Calculate cotangente Laplacian value at vertex of index i_vertex.
+        ScalarType laplacian(IndexType i_vertex);
 
-    //! Vertices normales (must be of the same size as m_vertices).
-    std::vector<Vector> m_normals;
+        //! Calculate the normal of a vertex using the cotangent Laplacian.
+        Vector laplacian_vector(IndexType i_vertex);
 
-    //! Vertices values (must be of the same size as m_vertices). 
-    std::vector<ScalarType> m_values;
+        //! Checking the integrity of the mesh structure.
+        void integrity_check() const;
 
-    //! Vertices curavture (must be of the same size as m_vertices). 
-    std::vector<ScalarType> m_curvature;
-};
+    private:
+        //! Vertices of the mesh.
+        std::vector<Vertex> m_vertices;
+
+        //! Sewn-together faces of the mesh.
+        std::vector<Face> m_faces;
+
+        //! Vertices normales (must be of the same size as m_vertices).
+        std::vector<Vector> m_normals;
+
+        //! Vertices values (must be of the same size as m_vertices).
+        std::vector<ScalarType> m_values;
+
+        //! Vertices curavture (must be of the same size as m_vertices).
+        std::vector<ScalarType> m_curvature;
+    };
 } // namespace gam

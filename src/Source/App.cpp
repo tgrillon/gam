@@ -192,6 +192,13 @@ bool App::event_imgui()
     return true;
 }
 
+void App::center_camera(const Mesh &mesh)
+{
+    Point pmin, pmax; 
+    mesh.bounds(pmin, pmax);
+    m_camera.lookat(pmin, pmax);
+}
+
 void App::vsync_off()
 {
     // desactive vsync pour les mesures de temps

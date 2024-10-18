@@ -1,22 +1,26 @@
 set(SOURCE_DIR "Source")
 set(INCLUDE_DIR "Include")
 add_executable(${PROJECT_NAME} main.cpp 
+                               ${SOURCE_DIR}/utils.cpp
                                ${SOURCE_DIR}/TMesh.cpp
-                               ${SOURCE_DIR}/geometry.cpp
+                               ${SOURCE_DIR}/Geometry.cpp
                                ${SOURCE_DIR}/Viewer.cpp
                                ${SOURCE_DIR}/Window.cpp
                                ${SOURCE_DIR}/App.cpp
                                ${SOURCE_DIR}/Framebuffer.cpp
                                ${SOURCE_DIR}/Delaunay.cpp
+                               ${SOURCE_DIR}/Timer.cpp
                                ${SOURCE_DIR}/pch.cpp
+
                                ${INCLUDE_DIR}/utils.h
                                ${INCLUDE_DIR}/TMesh.h
-                               ${INCLUDE_DIR}/geometry.h
+                               ${INCLUDE_DIR}/Geometry.h
                                ${INCLUDE_DIR}/Viewer.h
                                ${INCLUDE_DIR}/Window.h
                                ${INCLUDE_DIR}/App.h
                                ${INCLUDE_DIR}/Framebuffer.h
                                ${INCLUDE_DIR}/Delaunay.h
+                               ${INCLUDE_DIR}/Timer.h
                                ${INCLUDE_DIR}/pch.h
                                )
  

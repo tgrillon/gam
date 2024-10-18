@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometry.h"
+#include "Geometry.h"
 
 namespace gam
 {

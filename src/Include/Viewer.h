@@ -3,63 +3,84 @@
 #include "App.h"
 #include "Framebuffer.h"
 #include "TMesh.h"
+#include "Timer.h"
 #include "utils.h"
 
 class Viewer : public App
 {
 public:
-  Viewer();
+    Viewer();
 
-  int init_any();
-  int quit_any();
+    int init_any();
+    int quit_any();
 
-  int render();
-
-  inline void tmesh(const gam::TMesh& mesh) { m_tmesh= mesh; }
+    int render();
 
 private:
-  int render_ui();
-  int render_any();
+    int init_programs();
+    int init_laplacian_demo();
+    int init_delaunay_demo();
 
-  int render_menu_bar(); 
+    int handle_events();
 
-private: 
-  Mesh m_object;
-  Mesh m_repere;
+    int render_ui();
+    int render_any();
 
-  gam::TMesh m_tmesh; 
+    int render_laplacian_demo();
+    int render_delaunay_demo();
 
-  GLuint m_program;
-  GLuint m_program_edges;
-  GLuint m_program_points;
-  GLuint m_heat_diffusion_tex;
+    int render_laplacian_params();
+    int render_laplacian_stats();
+    int render_delaunay_params();
+    int render_delaunay_stats();
 
-  std::string m_obj_file;
-  std::string m_file_name;
+    int render_demo_buttons();
+    int render_menu_bar();
 
-  Framebuffer m_framebuffer; 
+private:
+    Mesh m_grid;
+    Mesh m_object;
+    Mesh m_repere;
+    Mesh m_blue_noise;
 
-  float m_clear_color[3]{0.678f, 0.686f, 0.878f}; 
-  float m_mesh_color[4]{1.0f, 0.0f, 0.0f, 1.0f}; 
-  float m_edges_color[4]{1.0f, 1.0f, 0.0f, 1.0f}; 
-  float m_points_color[4]{0.0f, 0.0f, 1.0f, 1.0f};
-  
-  float m_size_edge{1.0f};
-  float m_size_point{15.0f};
+    gam::TMesh m_laplacian;
+    gam::TMesh m_delaunay;
 
-  bool m_show_style_editor{false};
-  bool m_show_ui {true};
-  bool m_dark_theme {true};
-  bool m_need_update{false}; 
+    GLuint m_program;
+    GLuint m_program_edges;
+    GLuint m_program_points;
+    GLuint m_heat_diffusion_tex;
 
-  bool m_show_normals{false}; 
-  bool m_show_curvature{false}; 
-  bool m_show_heat_diffusion{false};
-  bool m_show_normal_color{false};
-  bool m_show_smooth_normal{false};
+    std::string m_obj_file;
+    std::string m_file_name;
 
-  bool m_show_faces{true};
-  bool m_show_edges{false};
-  bool m_show_points{false};
+    Framebuffer m_framebuffer;
 
+    Timer m_timer; 
+
+    float m_clear_color[3]{0.678f, 0.686f, 0.878f};
+    float m_mesh_color[4]{1.0f, 0.0f, 0.0f, 1.0f};
+    float m_edges_color[4]{1.0f, 1.0f, 0.0f, 1.0f};
+    float m_points_color[4]{0.0f, 0.0f, 1.0f, 1.0f};
+
+    float m_size_edge{1.0f};
+    float m_size_point{15.0f};
+
+    bool m_delaunay_demo{false};
+    bool m_laplacian_demo{true};
+
+    bool m_show_style_editor{false};
+    bool m_show_ui{true};
+    bool m_dark_theme{true};
+    bool m_need_update{false};
+
+    bool m_show_normals{false};
+    bool m_show_curvature{false};
+    bool m_show_heat_diffusion{false};
+    bool m_show_normal_color{false};
+    bool m_show_smooth_normal{false};
+
+    bool m_show_faces{true};
+    bool m_show_edges{false};
+    bool m_show_points{false};
 };
