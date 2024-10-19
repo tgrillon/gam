@@ -47,6 +47,7 @@ private:
     gam::TMesh m_delaunay;
 
     GLuint m_program;
+    GLuint m_program_2;
     GLuint m_program_edges;
     GLuint m_program_points;
     GLuint m_heat_diffusion_tex;

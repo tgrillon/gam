@@ -83,6 +83,14 @@ int Viewer::init_programs()
         return -1;
     }
 
+    m_program_2 = read_program(std::string(SHADER_DIR) + "/base2.glsl");
+    if (program_print_errors(m_program_2) < 0)
+    {
+        utils::error("in [read_program] for", std::string(SHADER_DIR) + "/base.glsl");
+        return -1;
+    }
+
+
     m_program_edges = read_program(std::string(SHADER_DIR) + "/edges.glsl");
     if (program_print_errors(m_program_edges) < 0)
     {
@@ -350,15 +358,15 @@ int Viewer::render_delaunay_demo()
     Transform mvp = projection * view * model;
     Transform mv = model * view;
 
-    glUseProgram(m_program);
+    glUseProgram(m_program_2);
 
-    program_uniform(m_program, "uMvpMatrix", mvp);
-    program_uniform(m_program, "uMvMatrix", mv);
-    program_uniform(m_program, "uNormalMatrix", mv.normal());
+    program_uniform(m_program_2, "uMvpMatrix", mvp);
+    program_uniform(m_program_2, "uMvMatrix", mv);
+    // program_uniform(m_program_2, "uNormalMatrix", mv.normal());
 
     Point light = m_camera.position();
-    program_uniform(m_program, "uLight", view(light));
-    GLuint location = glGetUniformLocation(m_program, "uMeshColor");
+    program_uniform(m_program_2, "uLight", view(light));
+    GLuint location = glGetUniformLocation(m_program_2, "uMeshColor");
     glUniform4fv(location, 1, &m_mesh_color[0]);
     if (m_blue_noise.triangle_count() > 0)
     {
@@ -368,7 +376,7 @@ int Viewer::render_delaunay_demo()
             glPolygonOffset(1.0, 1.0);
             glDepthFunc(GL_LESS);
 
-            m_blue_noise.draw(m_program, true, false, false, false, false);
+            m_blue_noise.draw(m_program_2, true, false, false, false, false);
             glDisable(GL_POLYGON_OFFSET_FILL);
         }
         if (m_show_edges)
