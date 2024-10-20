@@ -128,18 +128,21 @@ int Viewer::init_laplacian_demo()
 
 int Viewer::init_delaunay_demo()
 {
-    // points = utils::read_point_set("/blue_noise.txt", 100., 100.);
+    points = utils::read_point_set("/blue_noise.txt", 100., 100.);
 
-    points.emplace_back(1.0, .0, .0);
-    points.emplace_back(1.0, 1.0, .0);
-    points.emplace_back(0.0, 1.0, .0);
-    points.emplace_back(2.0, 2.0, .0);
-    points.emplace_back(0.0, -1.0, .0);
-    points.emplace_back(1., -2., .0);
-    points.emplace_back(-2., 0., .0);
+    // points.emplace_back(1.0, .0, .0);
+    // points.emplace_back(1.0, 1.0, .0);
+    // points.emplace_back(0.0, 1.0, .0);
+    // points.emplace_back(2.0, 2.0, .0);
+    // points.emplace_back(0.0, -1.0, .0);
+    // points.emplace_back(1., -2., .0);
+    // points.emplace_back(-2., 0., .0);
+    // points.emplace_back(0., 0., 0.);
+    // points.emplace_back(0.25, 0.25, 0.);
+    // points.emplace_back(.5, .5, 0.);
     
-    // auto rng = std::default_random_engine {};
-    // std::shuffle(std::begin(points), std::end(points), rng);
+    auto rng = std::default_random_engine {};
+    std::shuffle(std::begin(points), std::end(points), rng);
 
     m_delaunay.insert_vertices(points);
 

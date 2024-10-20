@@ -1,6 +1,6 @@
 #include "TMesh.h"
 
-#define DEBUG 
+// #define DEBUG 
 namespace gam
 {
 
@@ -371,31 +371,35 @@ namespace gam
 
     void TMesh::insert_vertex(const Point &p)
     {
-        std::pair<bool, int> trianglePredicate;
-        int i_face = -1;
-        for (int i = 0; i < face_count(); ++i)
-        {
-            auto face = m_faces[i];
+        auto loc = locate_triangle(p);
+        bool found = loc.first;
+        int i_face = loc.second.first;
+        int i_edge = loc.second.second;
 
-            if (face[0] == 0 || face[1] == 0 || face[2] == 0) continue; // inf face 
-            trianglePredicate = in_triangle(Vertex(p), m_vertices[face[0]], m_vertices[face[1]], m_vertices[face[2]]);
-            if (trianglePredicate.first)
-            {
-                i_face = i;
-                break;
-            }
-        }
-
-        if (i_face >= 0)
+        if (found) // p is in a face
         {
-            if (trianglePredicate.second >= 0)
-                edge_split(p, i_face, trianglePredicate.second);
+            if (i_edge >= 0)
+                edge_split(p, i_face, i_edge);
             else
                 triangle_split(p, i_face);
         }
         else // point is outside every faces
         {
             insert_outside(p, i_face);
+        }
+    }
+
+    void TMesh::slide_triangle(IndexType i_face)
+    {
+        assert(i_face < face_count());
+
+        if (m_faces[i_face][1] == 0)
+        {
+            m_faces[i_face].slide_vertices_left();
+        }
+        else if (m_faces[i_face][2] == 0)
+        {
+            m_faces[i_face].slide_vertices_right();
         }
     }
 
@@ -417,7 +421,7 @@ namespace gam
         int o;
         do 
         {
-            if (is_inf_face(i_face)) // if its an infinity face 
+            if (is_inf_face(i_face)) // if its an infinite face 
             {
                 f_is_inf = true; 
                 continue; 
@@ -529,73 +533,69 @@ namespace gam
 
     void TMesh::insert_outside(const Point &p, IndexType i_face)
     {
-        auto nv = neighboring_vertices_of_vertex(0);
         auto nf = neighboring_faces_of_vertex(0);
 
-        int cpt = 0;
+        int itf = std::find(nf.begin(), nf.end(), i_face) - nf.begin();
 
-        int i = 0; 
-        Point a = Vertex::as_point(m_vertices[nv[i]]);
-        Point b = Vertex::as_point(m_vertices[nv[i + 1]]);
-        while (orientation(a, b, p) == 1 && i < nv.size())
+        triangle_split(p, i_face);
+
+        slide_triangle(face_count() - 1); // we check the last added face.
+
+        // check right
+        int i = (itf - 1 + nf.size()) % nf.size();
+        Point a = Vertex::as_point(m_vertices[m_faces[nf[i]][1]]);
+        Point b = Vertex::as_point(m_vertices[m_faces[nf[i]][2]]);
+        while (orientation(a, b, p) == 1)
         {
-            if (cpt < 1) 
-            {
-                triangle_split(p, nf[i]);
-                cpt++;
-            }
-            else 
-            {
-                flip_edge(nf[i], 1);
-            }
-
-            a = Vertex::as_point(m_vertices[nv[++i]]);
-            b = Vertex::as_point(m_vertices[nv[i + 1]]);
+            flip_edge(nf[i], 1);
+            slide_triangle(nf[i]);
+            slide_triangle(m_faces[nf[i]](1));
+            i = (i - 1 + nf.size()) % nf.size();
+            a = Vertex::as_point(m_vertices[m_faces[nf[i]][1]]);
+            b = Vertex::as_point(m_vertices[m_faces[nf[i]][2]]);
         }
 
-        i = 0; 
-        a = Vertex::as_point(m_vertices[nv[i]]);
-        b = Vertex::as_point(m_vertices[nv[(i - 1 + nv.size()) % nv.size()]]);
-        while (orientation(a, b, p) == -1)
+        i = (itf + 1) % nf.size();
+        a = Vertex::as_point(m_vertices[m_faces[nf[i]][1]]);
+        b = Vertex::as_point(m_vertices[m_faces[nf[i]][2]]);
+        while (orientation(a, b, p) == 1)
         {
-            if (cpt < 1)
-            {
-                i = (i - 1 + nv.size()) % nv.size(); 
-                triangle_split(p, nf[i]);
-                cpt++;
-            }
-            else 
-            {
-                flip_edge(nf[i], 2);
-                i = (i - 1 + nv.size()) % nv.size(); 
-            }
-
-            
-            a = Vertex::as_point(m_vertices[nv[i]]);
-            b = Vertex::as_point(m_vertices[nv[i + 1]]);
+            flip_edge(nf[i], 2);
+            slide_triangle(nf[i]);
+            slide_triangle(m_faces[nf[i]](2));
+            i = (i + 1) % nf.size();
+            a = Vertex::as_point(m_vertices[m_faces[nf[i]][1]]);
+            b = Vertex::as_point(m_vertices[m_faces[nf[i]][2]]);
         }
     }
 
     void TMesh::flip_edge(IndexType iFace0, IndexType iEdge0)
     {
         IndexType iFace1 = m_faces[iFace0](iEdge0);
+        IndexType iEdge1 = m_faces[iFace1].get_edge(iFace0);
 
         Face face0 = m_faces[iFace0];
         Face face1 = m_faces[iFace1];
 
-        m_faces[iFace0][1] = face1[1];
-        m_faces[iFace0](0) = face0(2);
-        m_faces[iFace0](2) = face1(2);
+        m_faces[iFace0][0] = face0[iEdge0];
+        m_faces[iFace0][1] = face0[(iEdge0 + 1) % 3];
+        m_faces[iFace0][2] = face1[iEdge1];
+        m_faces[iFace0](0) = face1((iEdge1 + 1) % 3);
+        m_faces[iFace0](1) = iFace1;
+        m_faces[iFace0](2) = face0((iEdge0 + 2) % 3);
 
-        m_faces[iFace1][0] = face0[2];
-        m_faces[iFace1](1) = face0(0);
-        m_faces[iFace1](2) = face1(1);
+        m_faces[iFace1][0] = face1[iEdge1];
+        m_faces[iFace1][1] = face1[(iEdge1 + 1) % 3];
+        m_faces[iFace1][2] = face0[iEdge0];
+        m_faces[iFace1](0) = face0((iEdge0 + 1) % 3);
+        m_faces[iFace1](1) = iFace0;
+        m_faces[iFace1](2) = face1((iEdge1 + 2) % 3);
 
-        m_vertices[m_faces[iFace0][0]].FaceIndex = iFace0;
-        m_vertices[m_faces[iFace1][2]].FaceIndex = iFace1;
+        m_vertices[face0[(iEdge0 + 1) % 3]].FaceIndex = iFace0;
+        m_vertices[face1[(iEdge1 + 1) % 3]].FaceIndex = iFace1;
 
-        m_faces[m_faces[iFace0](2)].change_neighbor(iFace1, iFace0);
-        m_faces[m_faces[iFace1](1)].change_neighbor(iFace0, iFace1);
+        m_faces[face0((iEdge0 + 1) % 3)].change_neighbor(iFace0, iFace1);
+        m_faces[face1((iEdge1 + 1) % 3)].change_neighbor(iFace1, iFace0);
 
 #ifdef DEBUG
         integrity_check();
@@ -624,10 +624,12 @@ namespace gam
         m_faces.emplace_back(0, 3, 2, 0, 1, 3);
         m_faces.emplace_back(0, 1, 3, 0, 2, 1);
 
-        // for (int i = 3; i < 4; ++i)
-        // {
-        //     insert_vertex(points[i]);
-        // }
+        for (int i = 3; i < points.size(); ++i)
+        {
+            insert_vertex(points[i]);
+        }
+
+        integrity_check();
     }
 
     void TMesh::clear()

@@ -102,6 +102,32 @@ namespace gam
         return Vertices[i];
     }
 
+    void Face::slide_vertices_left()
+    {
+        auto tmp = Vertices[0];
+        Vertices[0] = Vertices[1];
+        Vertices[1] = Vertices[2];
+        Vertices[2] = tmp;
+
+        tmp = Neighbors[0];
+        Neighbors[0] = Neighbors[1];
+        Neighbors[1] = Neighbors[2];
+        Neighbors[2] = tmp;
+    }
+
+    void Face::slide_vertices_right()
+    {
+        auto tmp = Vertices[0];
+        Vertices[0] = Vertices[2];
+        Vertices[1] = tmp;
+        Vertices[2] = Vertices[1];
+
+        tmp = Neighbors[0];
+        Neighbors[0] = Neighbors[2];
+        Neighbors[1] = tmp;
+        Neighbors[2] = Neighbors[1];
+    }
+
     void Face::change_neighbor(IndexType i_face, IndexType value)
     {
         for (auto &n : Neighbors)

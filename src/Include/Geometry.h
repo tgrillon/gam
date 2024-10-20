@@ -37,6 +37,9 @@ namespace gam
         //! Get vertex of index i.
         int &operator[](int i);
 
+        void slide_vertices_left();
+        void slide_vertices_right();
+
         void change_neighbor(IndexType i_face, IndexType value);
 
         int get_edge(IndexType i_face) const;

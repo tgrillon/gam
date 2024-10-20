@@ -4489,7 +4489,7 @@ static int stbtt__compute_crossings_x(float x, float y, int nverts, stbtt_vertex
    orig[0] = x;
    orig[1] = y;
 
-   // test a ray from (-infinity,y) to (x,y)
+   // test a ray from (-infinite,y) to (x,y)
    for (i=0; i < nverts; ++i) {
       if (verts[i].type == STBTT_vline) {
          int x0 = (int) verts[i-1].x, y0 = (int) verts[i-1].y;

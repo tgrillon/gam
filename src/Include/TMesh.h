@@ -101,10 +101,13 @@ namespace gam
         void clear();
 
     private:
-        //! Returns true if i_face is an infinity faces, false otherwise. 
+        //! Use for infinite faces, they must have the infinite point (of index 0) as first vertex (local index 0). This method check if the infinite face is well constructed, if not it do the necessary operation. 
+        void slide_triangle(IndexType i_face);
+
+        //! Returns true if i_face is an infinite faces, false otherwise. 
         bool is_inf_face(IndexType i_face) const;
 
-        //! Locate the triangle that contains p : <in_a_face (infinity face excluded), <face index, edge index>>
+        //! Locate the triangle that contains p : <in_a_face (infinite face excluded), <face index, edge index>>
         std::pair<bool, std::pair<int, int>> locate_triangle(const Point& p) const; 
 
         //! Splits a triangle face into three by insertion of a new vertex that is located at the position provided in parameter.
