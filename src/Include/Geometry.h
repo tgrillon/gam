@@ -59,7 +59,12 @@ namespace gam
     //! Segments intersection predicate : returns true if the segment AB intersects with the segment CD, false if not. 
     bool intersect(const Point& a, const Point& b, const Point& c, const Point& d);
 
-    //! returns the index of the edge of the CDE triangle intersected by the segment AB, -1 if no intersection exists.  
+    //! Returns the index of the edge of the CDE triangle intersected by the segment AB, -1 if no intersection exists.  
     int intersected_edge(const Point& a, const Point& b, const Point& c, const Point& d, const Point& e);
+
+    //! Returns true if a point p is in a circle circumscribed at a, b and c, false otherwise.
+    bool in_circle(const Point& p, const Point& a, const Point& b, const Point& c);
+
+    ScalarType det(ScalarType i, ScalarType j, ScalarType k, ScalarType l);
 
 } // namespace gam

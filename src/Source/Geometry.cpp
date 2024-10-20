@@ -54,6 +54,30 @@ namespace gam
                                                                  : -1;
     }
 
+    bool in_circle(const Point &p, const Point &a, const Point &b, const Point &c)
+    {
+        ScalarType c00 = b.x - a.x;
+        ScalarType c01 = c.x - a.x;
+        ScalarType c02 = p.x - a.x;
+
+        ScalarType c10 = b.y - a.y;
+        ScalarType c11 = c.y - a.y;
+        ScalarType c12 = p.y - a.y;
+
+        ScalarType c20 = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+        ScalarType c21 = (c.x - a.x) * (c.x - a.x) + (c.y - a.y) * (c.y - a.y);
+        ScalarType c22 = (p.x - a.x) * (p.x - a.x) + (p.y - a.y) * (p.y - a.y);
+
+        ScalarType d = c00 * det(c11, c12, c21, c22) - c01 * det(c10, c12, c20, c22) + c02 * det(c10, c11, c20, c21);
+
+        return d <= 0;
+    }
+
+    ScalarType det(ScalarType i, ScalarType j, ScalarType k, ScalarType l)
+    {
+        return i * l - j * k;
+    }
+
     Vertex::Vertex(const Point &point, int i_face) : X(point.x), Y(point.y), Z(point.z), FaceIndex(i_face)
     {
     }
