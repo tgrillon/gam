@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <functional>
 #include <variant>
+#include <random>
 
 #include <string>
 #include <sstream>

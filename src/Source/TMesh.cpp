@@ -1,6 +1,6 @@
 #include "TMesh.h"
 
-#define DEBUG
+#define DEBUG 
 namespace gam
 {
 
@@ -12,6 +12,8 @@ namespace gam
 
         for (int i = 0; i < vertex_count(); ++i)
         {
+            if (i == 0) mesh.color(White());
+            else mesh.color(Red());
             if (m_normals.size() > 0)
             {
                 mesh.normal(m_normals[i]);
@@ -247,8 +249,8 @@ namespace gam
     std::vector<IndexType> TMesh::neighboring_vertices_of_vertex(IndexType i_vertex) const
     {
         assert(i_vertex < vertex_count());
-
         assert(m_vertices[i_vertex].FaceIndex != -1);
+
         std::vector<IndexType> neighbors;
         IndexType startFaceIndex = m_vertices[i_vertex].FaceIndex;
         IndexType currentFaceIndex = startFaceIndex;
@@ -369,12 +371,13 @@ namespace gam
 
     void TMesh::insert_vertex(const Point &p)
     {
-        std::pair<bool, u_char> trianglePredicate;
+        std::pair<bool, int> trianglePredicate;
         int i_face = -1;
         for (int i = 0; i < face_count(); ++i)
         {
             auto face = m_faces[i];
 
+            if (face[0] == 0 || face[1] == 0 || face[2] == 0) continue; // inf face 
             trianglePredicate = in_triangle(Vertex(p), m_vertices[face[0]], m_vertices[face[1]], m_vertices[face[2]]);
             if (trianglePredicate.first)
             {
@@ -392,19 +395,73 @@ namespace gam
         }
         else // point is outside every faces
         {
-            auto nv = neighboring_vertices_of_vertex(0);
-            auto nf = neighboring_faces_of_vertex(0);
-
-            for (int i = 0; i < nv.size() - 1; ++i)
-            {
-                Point a = Vertex::as_point(m_vertices[nv[i]]);
-                Point b = Vertex::as_point(m_vertices[nv[i + 1]]);
-                if (orientation(a, b, p) > 0.)
-                {
-                    triangle_split(p, nf[i]);
-                }
-            }
+            insert_outside(p, i_face);
         }
+    }
+
+    bool TMesh::is_inf_face(IndexType i_face) const
+    {
+        return m_faces[i_face][0] == 0 || m_faces[i_face][1] == 0 || m_faces[i_face][2] == 0;
+    }
+
+    std::pair<bool, std::pair<int, int>> TMesh::locate_triangle(const Point &p) const
+    {
+        int i_face = 0;
+        int i_edge = 0;
+
+        int i_edge_to_avoid = -1; 
+        int i_previous_face = -1;
+
+        bool f_is_inf = false; 
+        bool p_in_f = false; 
+        int o;
+        do 
+        {
+            if (is_inf_face(i_face)) // if its an infinity face 
+            {
+                f_is_inf = true; 
+                continue; 
+            }
+
+            if (i_edge_to_avoid != -1)
+            { 
+                i_edge = (i_edge_to_avoid + 1) % 3;
+            }
+            else
+            {
+                i_edge_to_avoid = i_edge;
+            } 
+
+            Point a = Vertex::as_point(m_vertices[m_faces[i_face][(i_edge + 2) % 3]]);
+            Point b = Vertex::as_point(m_vertices[m_faces[i_face][(i_edge + 1) % 3]]);
+            while (!p_in_f && (o = orientation(a, b, p)) < 1) // clockwise or on edge 
+            {
+                if (o == 0) 
+                {
+                    p_in_f = true; 
+                    continue; 
+                }
+                i_edge = (i_edge + 1) % 3;
+                if (i_edge == i_edge_to_avoid) 
+                {
+                    i_edge = -1;
+                    p_in_f = true; 
+                    continue; 
+                }
+                
+                a = Vertex::as_point(m_vertices[m_faces[i_face][(i_edge + 2) % 3]]);
+                b = Vertex::as_point(m_vertices[m_faces[i_face][(i_edge + 1) % 3]]);
+            } 
+
+            if (p_in_f) continue;
+            
+            i_previous_face = i_face;
+            i_face = m_faces[i_face](i_edge);
+            i_edge_to_avoid = m_faces[i_face].get_edge(i_previous_face);
+        } while (!p_in_f && !f_is_inf);
+
+
+        return { !f_is_inf, { i_face, i_edge } };
     }
 
     void TMesh::triangle_split(const Point &p, IndexType i_face)
@@ -423,7 +480,6 @@ namespace gam
         m_faces[i_face](1) = iFace13;
 
         m_faces.emplace_back(face[1], face[2], i_vertex, iFace13, i_face, face(0));
-
         m_faces.emplace_back(face[2], face[0], i_vertex, i_face, iFace12, face(1));
 
         m_vertices[face[2]].FaceIndex = iFace12;
@@ -431,8 +487,10 @@ namespace gam
         m_faces[face(0)].change_neighbor(i_face, iFace12);
         m_faces[face(1)].change_neighbor(i_face, iFace13);
 
+#ifdef DEBUG
         integrity_check();
         utils::status("[triangle_split] Integrity_check passed");
+#endif
     }
 
     void TMesh::edge_split(const Point &p, IndexType iFace0, IndexType iEdge0)
@@ -463,8 +521,59 @@ namespace gam
         m_faces[face0((iEdge0 + 1) % 3)].change_neighbor(iFace0, iFace13);
         m_faces[face1((iEdge1 + 2) % 3)].change_neighbor(iFace1, iFace12);
 
+#ifdef DEBUG
         integrity_check();
         utils::status("[edge_split] Integrity_check passed");
+#endif  
+    }
+
+    void TMesh::insert_outside(const Point &p, IndexType i_face)
+    {
+        auto nv = neighboring_vertices_of_vertex(0);
+        auto nf = neighboring_faces_of_vertex(0);
+
+        int cpt = 0;
+
+        int i = 0; 
+        Point a = Vertex::as_point(m_vertices[nv[i]]);
+        Point b = Vertex::as_point(m_vertices[nv[i + 1]]);
+        while (orientation(a, b, p) == 1 && i < nv.size())
+        {
+            if (cpt < 1) 
+            {
+                triangle_split(p, nf[i]);
+                cpt++;
+            }
+            else 
+            {
+                flip_edge(nf[i], 1);
+            }
+
+            a = Vertex::as_point(m_vertices[nv[++i]]);
+            b = Vertex::as_point(m_vertices[nv[i + 1]]);
+        }
+
+        i = 0; 
+        a = Vertex::as_point(m_vertices[nv[i]]);
+        b = Vertex::as_point(m_vertices[nv[(i - 1 + nv.size()) % nv.size()]]);
+        while (orientation(a, b, p) == -1)
+        {
+            if (cpt < 1)
+            {
+                i = (i - 1 + nv.size()) % nv.size(); 
+                triangle_split(p, nf[i]);
+                cpt++;
+            }
+            else 
+            {
+                flip_edge(nf[i], 2);
+                i = (i - 1 + nv.size()) % nv.size(); 
+            }
+
+            
+            a = Vertex::as_point(m_vertices[nv[i]]);
+            b = Vertex::as_point(m_vertices[nv[i + 1]]);
+        }
     }
 
     void TMesh::flip_edge(IndexType iFace0, IndexType iEdge0)
@@ -488,8 +597,10 @@ namespace gam
         m_faces[m_faces[iFace0](2)].change_neighbor(iFace1, iFace0);
         m_faces[m_faces[iFace1](1)].change_neighbor(iFace0, iFace1);
 
+#ifdef DEBUG
         integrity_check();
         utils::status("[flip_edge] Integrity_check passed");
+#endif
     }
 
     void TMesh::insert_vertices(const std::vector<Point> &points)
@@ -499,7 +610,7 @@ namespace gam
         m_vertices.reserve(points.size() + 1);
 
         // Insertion du point infini
-        Point inf_point(0., 0., -1);
+        Point inf_point(0., 0., 5);
         m_vertices.emplace_back(inf_point, 1);
 
         // Ajouer suffisamment de point pour former un triangle
@@ -510,16 +621,13 @@ namespace gam
         m_faces.emplace_back(1, 2, 3, 2, 3, 1);
 
         m_faces.emplace_back(0, 2, 1, 0, 3, 2);
-        m_faces.emplace_back(0, 3, 2, 0, 3, 1);
+        m_faces.emplace_back(0, 3, 2, 0, 1, 3);
         m_faces.emplace_back(0, 1, 3, 0, 2, 1);
 
         // for (int i = 3; i < 4; ++i)
         // {
         //     insert_vertex(points[i]);
         // }
-
-        triangle_split(points[3], 3);
-        triangle_split(points[4], 2);
     }
 
     void TMesh::clear()
@@ -597,6 +705,7 @@ namespace gam
 
     void TMesh::integrity_check() const
     {
+        // Check the integrity of the vertices of the mesh. 
         for (IndexType i = 0; i < vertex_count(); ++i)
         {
             int i_face = m_vertices[i].FaceIndex;
@@ -604,6 +713,7 @@ namespace gam
             assert(face[0] == i || face[1] == i || face[2] == i);
         }
 
+        // Check the integrity of each neighbor of each face of the mesh.
         for (IndexType i = 0; i < face_count(); ++i)
         {
             auto face = m_faces[i];
@@ -614,5 +724,4 @@ namespace gam
             }
         }
     }
-
 } // namespace gam

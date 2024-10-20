@@ -128,13 +128,18 @@ int Viewer::init_laplacian_demo()
 
 int Viewer::init_delaunay_demo()
 {
-    // auto points = utils::read_point_set("/blue_noise.txt", 100., 100.);
-    std::vector<Point> points;
+    // points = utils::read_point_set("/blue_noise.txt", 100., 100.);
+
     points.emplace_back(1.0, .0, .0);
     points.emplace_back(1.0, 1.0, .0);
     points.emplace_back(0.0, 1.0, .0);
-    points.emplace_back(.0, .0, .0);
-    points.emplace_back(.0, 2.0, .0);
+    points.emplace_back(2.0, 2.0, .0);
+    points.emplace_back(0.0, -1.0, .0);
+    points.emplace_back(1., -2., .0);
+    points.emplace_back(-2., 0., .0);
+    
+    // auto rng = std::default_random_engine {};
+    // std::shuffle(std::begin(points), std::end(points), rng);
 
     m_delaunay.insert_vertices(points);
 
@@ -376,7 +381,7 @@ int Viewer::render_delaunay_demo()
             glPolygonOffset(1.0, 1.0);
             glDepthFunc(GL_LESS);
 
-            m_blue_noise.draw(m_program_2, true, false, false, false, false);
+            m_blue_noise.draw(m_program_2, true, false, false, true, false);
             glDisable(GL_POLYGON_OFFSET_FILL);
         }
         if (m_show_edges)
@@ -464,6 +469,19 @@ int Viewer::render_laplacian_stats()
 
 int Viewer::render_delaunay_params()
 {
+    std::random_device hwseed;
+    std::default_random_engine rng(hwseed());
+    std::uniform_real_distribution<float> uniform(-5.f, 5.f);
+
+    ImGui::SeparatorText("DELAUNAY PARAMS");
+    if (ImGui::Button("Next insertion", ImVec2(-FLT_MIN, 45.0f)))
+    {
+        // m_delaunay.insert_vertex({uniform(rng), uniform(rng), 0.f});
+        m_delaunay.insert_vertex(points[idx++]);
+        m_blue_noise = m_delaunay.mesh();
+        center_camera(m_blue_noise);
+    }
+
     return 0;
 }
 

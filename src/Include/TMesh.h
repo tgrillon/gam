@@ -101,11 +101,20 @@ namespace gam
         void clear();
 
     private:
+        //! Returns true if i_face is an infinity faces, false otherwise. 
+        bool is_inf_face(IndexType i_face) const;
+
+        //! Locate the triangle that contains p : <in_a_face (infinity face excluded), <face index, edge index>>
+        std::pair<bool, std::pair<int, int>> locate_triangle(const Point& p) const; 
+
         //! Splits a triangle face into three by insertion of a new vertex that is located at the position provided in parameter.
         void triangle_split(const Point &p, IndexType i_face);
 
         //! Splits an edge into two by insertion of a new vertex that is located at the position provided in parameter. The incident faces are also divided into two faces.
         void edge_split(const Point &p, IndexType i_face, IndexType i_edge);
+
+        //! Insert a point that is outside the mesh.
+        void insert_outside(const Point& p, IndexType i_face);
 
         //! Calculate cotangente Laplacian value at vertex of index i_vertex.
         ScalarType laplacian(IndexType i_vertex);

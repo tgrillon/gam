@@ -84,4 +84,7 @@ private:
     bool m_show_faces{true};
     bool m_show_edges{false};
     bool m_show_points{false};
+
+    int idx {3};
+    std::vector<Point> points;
 };

@@ -29,11 +29,11 @@ namespace gam
         int d2 = orientation(Vertex::as_point(p), Vertex::as_point(b), Vertex::as_point(c));
         int d3 = orientation(Vertex::as_point(p), Vertex::as_point(c), Vertex::as_point(a));
 
-        if (d1 == 0)
+        if (d1 == 0 && d2 == 1 && d3 == 1)
             return {true, 2};
-        if (d2 == 0)
+        if (d1 == 1 && d2 == 0 && d3 == 1)
             return {true, 0};
-        if (d3 == 0)
+        if (d1 == 1 && d2 == 1 && d3 == 0)
             return {true, 1};
 
         if (d1 == 1 && d2 == 1 && d3 == 1)
@@ -114,7 +114,7 @@ namespace gam
         }
     }
 
-    int Face::get_edge(IndexType i_face)
+    int Face::get_edge(IndexType i_face) const
     {
         for (int i = 0; i < 3; ++i)
         {

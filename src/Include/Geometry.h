@@ -39,7 +39,7 @@ namespace gam
 
         void change_neighbor(IndexType i_face, IndexType value);
 
-        int get_edge(IndexType i_face);
+        int get_edge(IndexType i_face) const;
 
         int Vertices[3]{-1, -1, -1};
         int Neighbors[3]{-1, -1, -1};
