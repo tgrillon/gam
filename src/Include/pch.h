@@ -7,6 +7,7 @@
 #include <functional>
 #include <variant>
 #include <random>
+#include <limits>
 
 #include <utility>
 #include <string>

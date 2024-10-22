@@ -54,15 +54,16 @@ private:
 
     std::string m_obj_file;
     std::string m_file_name;
+    std::string m_file_cloud;
 
     Framebuffer m_framebuffer;
 
     Timer m_timer;
 
     float m_clear_color[3]{0.678f, 0.686f, 0.878f};
-    float m_mesh_color[4]{1.0f, 0.0f, 0.0f, 1.0f};
-    float m_edges_color[4]{1.0f, 1.0f, 0.0f, 1.0f};
-    float m_points_color[4]{0.0f, 0.0f, 1.0f, 1.0f};
+    float m_mesh_color[4]{1.0, 1.0, 1.0, 1.0f};
+    float m_edges_color[4]{0.0f, 0.0f, 1.0f, 1.0f};
+    float m_points_color[4]{0.3f, 0.2f, 0.8f, 1.0f};
 
     float m_size_edge{1.0f};
     float m_size_point{15.0f};
@@ -85,9 +86,13 @@ private:
     bool m_show_edges{false};
     bool m_show_points{false};
 
-    int m_dttms{0};
-    int m_dttus{0};
+    bool m_show_infinite_faces{false};
+
+    int m_dttms{0}; //! Delaunay Triangulation Time (ms)
+    int m_dttus{0}; //! Delaunay Triangulation Time (us)
 
     int idx{3};
     std::vector<Point> points;
+
+    ImVec2 window_min, window_max;
 };

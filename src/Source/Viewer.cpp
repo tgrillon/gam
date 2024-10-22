@@ -90,7 +90,6 @@ int Viewer::init_programs()
         return -1;
     }
 
-
     m_program_edges = read_program(std::string(SHADER_DIR) + "/edges.glsl");
     if (program_print_errors(m_program_edges) < 0)
     {
@@ -128,19 +127,29 @@ int Viewer::init_laplacian_demo()
 
 int Viewer::init_delaunay_demo()
 {
-    points = utils::read_point_set("/noise_random_2.txt");
+    // points = utils::read_point_set("/alpes_random_2.txt");
 
     // auto rng = std::default_random_engine {};
     // std::shuffle(std::begin(points), std::end(points), rng);
+
+    points.emplace_back(1.0, .0, .0);
+    points.emplace_back(1.0, 1.0, .0);
+    points.emplace_back(0.0, 1.0, .0);
+    points.emplace_back(2.0, 2.0, .0);
+    points.emplace_back(0.0, -1.0, .0);
+    points.emplace_back(1., -2., .0);
+    points.emplace_back(-2., 0., .0);
 
     m_timer.start();
     m_delaunay.insert_vertices(points);
     m_timer.stop();
 
+    idx = m_delaunay.vertex_count() == 0 ? 0 : m_delaunay.vertex_count() - 1;
+
     m_dttms = m_timer.ms();
     m_dttus = m_timer.us();
 
-    m_blue_noise = m_delaunay.mesh();
+    m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
 
     if (m_delaunay_demo)
     {
@@ -161,6 +170,13 @@ int Viewer::handle_events()
         {
             clear_key_state(SDLK_n);
             m_show_normals = !m_show_normals;
+        }
+
+        if (key_state(SDLK_i))
+        {
+            clear_key_state(SDLK_i);
+            m_show_infinite_faces = !m_show_infinite_faces;
+            m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
         }
 
         if (key_state(SDLK_e))
@@ -216,6 +232,33 @@ int Viewer::handle_events()
             }
             m_show_heat_diffusion = !m_show_heat_diffusion;
         }
+
+        if (m_delaunay_demo && key_state(SDLK_LCTRL))
+        {
+            clear_key_state(SDLK_LCTRL);
+
+            auto [x, y] = ImGui::GetMousePos();
+
+            x = x - window_min.x; 
+            y = y - window_min.y; 
+
+            float xf = (2.f * x / static_cast<float>(window_max.x - window_min.x)) - 1.f;
+            float yf = 1.f - (2.f * y / static_cast<float>(window_max.y - window_min.y));
+
+            Transform view = m_camera.view();
+            Transform projection = m_camera.projection();
+            Transform t = projection * view;
+            Transform tinv = t.inverse();
+
+            Point world_point = tinv(Point(xf, yf, 0));
+            Point camera_position = m_camera.position();
+
+            Vector direction(camera_position, world_point);
+            float time = - camera_position.z / direction.z;
+            Point point = camera_position + time * direction;
+            m_delaunay.insert_vertex(point);
+            m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+        }
     }
 
     return 0;
@@ -260,9 +303,7 @@ int Viewer::quit_any()
 int Viewer::render_any()
 {
     if (handle_events() < 0)
-    {
         utils::error("in [handle_events]");
-    }
 
     if (m_laplacian_demo)
         render_laplacian_demo();
@@ -288,7 +329,7 @@ int Viewer::render_laplacian_demo()
     program_uniform(m_program, "uNormalMatrix", mv.normal());
 
     Point light = m_camera.position();
-    program_uniform(m_program, "uLight", view(light));
+    program_uniform(m_program, "uLight", view(model(light)));
     GLuint location = glGetUniformLocation(m_program, "uMeshColor");
     glUniform4fv(location, 1, &m_mesh_color[0]);
     program_uniform(m_program, "uShowCurvature", m_show_curvature ? 1 : 0);
@@ -416,8 +457,8 @@ int Viewer::render_delaunay_demo()
 int Viewer::render_laplacian_params()
 {
     ImGui::SeparatorText("LOAD MESH");
-    ImGui::InputTextWithHint("Off name", "queen", &m_file_name);
-    if (ImGui::Button("Load mesh", ImVec2(100, 25)))
+    ImGui::InputTextWithHint("Off name", "ex : queen", &m_file_name);
+    if (ImGui::Button("Load mesh", ImVec2(-FLT_MIN, 35.0f)))
     {
         m_laplacian.load_off("/" + m_file_name + ".off");
         m_obj_file = "/" + m_file_name + ".obj";
@@ -470,11 +511,39 @@ int Viewer::render_delaunay_params()
     std::uniform_real_distribution<float> uniform(-5.f, 5.f);
 
     ImGui::SeparatorText("DELAUNAY PARAMS");
-    if (ImGui::Button("Next insertion", ImVec2(-FLT_MIN, 45.0f)))
+    if (ImGui::Button("Center camera", ImVec2(-FLT_MIN, 25.0f)))
+    {
+        center_camera(m_blue_noise);
+    }
+    ImGui::BeginDisabled(idx >= points.size());
+    if (ImGui::Button("Next insertion", ImVec2(-FLT_MIN, 35.0f)))
     {
         // m_delaunay.insert_vertex({uniform(rng), uniform(rng), 0.f});
         m_delaunay.insert_vertex(points[idx++]);
-        m_blue_noise = m_delaunay.mesh();
+        m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+        center_camera(m_blue_noise);
+    }
+    ImGui::EndDisabled();
+
+    if (ImGui::Checkbox("Infinite faces (i)", &m_show_infinite_faces))
+    {
+        m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+    }
+
+    ImGui::InputTextWithHint("Points cloud", "ex : alpes_random_2", &m_file_cloud);
+    if (ImGui::Button("Load points cloud", ImVec2(-FLT_MIN, 35.0f)))
+    {
+        points = utils::read_point_set("/" + m_file_cloud + ".txt");
+        m_timer.start();
+        m_delaunay.insert_vertices(points);
+        m_timer.stop();
+
+        idx = m_delaunay.vertex_count() == 0 ? 0 : m_delaunay.vertex_count() - 1;
+
+        m_dttms = m_timer.ms();
+        m_dttus = m_timer.us();
+        m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+
         center_camera(m_blue_noise);
     }
 
@@ -514,6 +583,14 @@ int Viewer::render_ui()
     // we access the ImGui window size
     const float window_width = ImGui::GetContentRegionAvail().x;
     const float window_height = ImGui::GetContentRegionAvail().y;
+
+    window_min = ImGui::GetWindowContentRegionMin();
+    window_max = ImGui::GetWindowContentRegionMax();
+
+    window_min.x += ImGui::GetWindowPos().x;
+    window_min.y += ImGui::GetWindowPos().y;
+    window_max.x += ImGui::GetWindowPos().x;
+    window_max.y += ImGui::GetWindowPos().y;
 
     // we rescale the framebuffer to the actual window size here and reset the glViewport
     m_framebuffer.rescale(window_width, window_height);

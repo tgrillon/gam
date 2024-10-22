@@ -5,7 +5,7 @@ namespace gam
 
     /************************* Triangulated Mesh **************************/
 
-    Mesh TMesh::mesh(bool curvature) const
+    Mesh TMesh::mesh(bool curvature, bool remove_infinite) const
     {
         Mesh mesh(GL_TRIANGLES);
 
@@ -28,9 +28,10 @@ namespace gam
             mesh.vertex(Vertex::as_point(m_vertices[i]));
         }
 
-        for (const auto &f : m_faces)
+        for (int i = 0; i < face_count(); ++i)
         {
-            mesh.triangle(f[0], f[1], f[2]);
+            if (remove_infinite && is_infinite_face(i)) continue; 
+            mesh.triangle(m_faces[i][0], m_faces[i][1], m_faces[i][2]);
         }
 
         return mesh;
@@ -388,7 +389,7 @@ namespace gam
         std::vector<Face> faces; 
         for (int i = 0; i < face_count(); ++i)
         {
-            if (is_inf_face(i)) continue; 
+            if (is_infinite_face(i)) continue; 
 
             faces.emplace_back(m_faces[i][0], m_faces[i][1], m_faces[i][2], m_faces[i](0), m_faces[i](1), m_faces[i](2));
         }
@@ -494,12 +495,12 @@ namespace gam
         {
             IndexType i_face0 = stack.top();
             stack.pop();
-            if (is_inf_face(i_face0)) continue;
+            if (is_infinite_face(i_face0)) continue;
 
             Face face0 = m_faces[i_face0];
             IndexType i_edge0 = local_index(i_vertex, i_face0);
             IndexType i_face1 = face0(i_edge0);
-            if (is_inf_face(i_face1)) continue;
+            if (is_infinite_face(i_face1)) continue;
 
             Face face1 = m_faces[i_face1];
             IndexType i_edge1 = face1.get_edge(i_face0);
@@ -536,7 +537,7 @@ namespace gam
         }
     }
 
-    bool TMesh::is_inf_face(IndexType i_face) const
+    bool TMesh::is_infinite_face(IndexType i_face) const
     {
         return m_faces[i_face][0] == 0 || m_faces[i_face][1] == 0 || m_faces[i_face][2] == 0;
     }
@@ -554,7 +555,7 @@ namespace gam
         int o;
         do 
         {
-            if (is_inf_face(i_face)) // if its an infinite face 
+            if (is_infinite_face(i_face)) // if its an infinite face 
             {
                 f_is_inf = true; 
                 continue; 
@@ -758,7 +759,7 @@ namespace gam
         m_vertices.reserve(points.size() + 1);
 
         // Insertion du point infini
-        Point inf_point(0., 0., -5000.);
+        Point inf_point(0., 0., -1);
         m_vertices.emplace_back(inf_point, 1);
         
         // Ajouer suffisamment de point pour former un triangle
@@ -784,7 +785,6 @@ namespace gam
         utils::status("[insert_vertices] Delaunay_check passed");
 #endif
 
-        remove_inf_faces();
         for (int i = 1; i < vertex_count(); ++i)
         {
             m_vertices[i].Z = m_values[i-1];
@@ -796,6 +796,7 @@ namespace gam
     {
         for (int i_face = 0; i_face < face_count(); ++i_face)
         {
+            if (is_infinite_face(i_face)) continue;
             Face face = m_faces[i_face];
             Point a = Vertex::as_point(m_vertices[face[0]]);
             Point b = Vertex::as_point(m_vertices[face[1]]);
@@ -803,7 +804,7 @@ namespace gam
             
             for (auto n : face.Neighbors)
             {
-                if (is_inf_face(n)) continue;
+                if (is_infinite_face(n)) continue;
                 int i_edge = m_faces[n].get_edge(i_face);
                 Point p = Vertex::as_point(m_vertices[m_faces[n][i_edge]]);
                 assert(!in_circle(p, a, b, c));

@@ -11,7 +11,7 @@ namespace gam
         TMesh() = default;
         TMesh(const std::vector<ScalarType> &values) : m_values(values) {}
 
-        Mesh mesh(bool curvature = true) const;
+        Mesh mesh(bool curvature = true, bool remove_infinite = false) const;
 
         //! Set the vertex value at index i.
         inline void vertex_value(IndexType i_vertex, ScalarType v)
@@ -123,7 +123,7 @@ namespace gam
         void lawson(IndexType i_vertex);
 
         //! Returns true if i_face is an infinite faces, false otherwise. 
-        bool is_inf_face(IndexType i_face) const;
+        bool is_infinite_face(IndexType i_face) const;
 
         //! Use for infinite faces, they must have the infinite point (of index 0) as first vertex (local index 0). This method check if the infinite face is well constructed, if not it do the necessary operation. 
         void slide_triangle(IndexType i_face);

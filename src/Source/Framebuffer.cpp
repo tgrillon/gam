@@ -42,9 +42,9 @@ std::shared_ptr<Framebuffer> Framebuffer::create(unsigned int width, unsigned in
 // and we rescale the buffer, so we're able to resize the window
 void Framebuffer::rescale(unsigned int width, unsigned int height)
 {
-  m_width= width;
-  m_height= height;
-  
+	m_width= width;
+	m_height= height;
+	
 	glBindTexture(GL_TEXTURE_2D, m_texture_id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
