@@ -1,7 +1,7 @@
 set(SOURCE_DIR "Source")
 set(INCLUDE_DIR "Include")
 add_executable(${PROJECT_NAME} main.cpp 
-                               ${SOURCE_DIR}/utils.cpp
+                               ${SOURCE_DIR}/Utils.cpp
                                ${SOURCE_DIR}/TMesh.cpp
                                ${SOURCE_DIR}/Geometry.cpp
                                ${SOURCE_DIR}/Viewer.cpp
@@ -12,7 +12,7 @@ add_executable(${PROJECT_NAME} main.cpp
                                ${SOURCE_DIR}/Timer.cpp
                                ${SOURCE_DIR}/pch.cpp
 
-                               ${INCLUDE_DIR}/utils.h
+                               ${INCLUDE_DIR}/Utils.h
                                ${INCLUDE_DIR}/TMesh.h
                                ${INCLUDE_DIR}/Geometry.h
                                ${INCLUDE_DIR}/Viewer.h

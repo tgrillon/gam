@@ -1,6 +1,6 @@
 #include "Timer.h"
 
-#include "utils.h"
+#include "Utils.h"
 
 void Timer::start()
 {

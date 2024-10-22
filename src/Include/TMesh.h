@@ -90,6 +90,9 @@ namespace gam
         void heat_diffusion(IndexType i_vertex, ScalarType delta_time);
 
         //! Insert a vertex of position p.
+        void insert_vertex(float x, float y, float z);
+
+        //! Insert a vertex of position p.
         void insert_vertex(const Point &p);
 
         //! Flips the edge opposed to the vertex of local index i_edge within the face of index i_face.
@@ -101,14 +104,29 @@ namespace gam
         void clear();
 
     private:
-        //! Use for infinite faces, they must have the infinite point (of index 0) as first vertex (local index 0). This method check if the infinite face is well constructed, if not it do the necessary operation. 
-        void slide_triangle(IndexType i_face);
+        // Remove the infinite faces added for the delaunay triangulation.
+        void remove_inf_faces();
+
+        //! Calculate cotangente Laplacian value at vertex of index i_vertex.
+        ScalarType laplacian(IndexType i_vertex);
+
+        //! Calculate the normal of a vertex using the cotangent Laplacian.
+        Vector laplacian_vector(IndexType i_vertex);
+
+        //! Locate the triangle that contains p : <in_a_face (infinite face excluded), <face index, edge index>>
+        std::pair<bool, std::pair<int, int>> locate_triangle(const Point& p) const;
+
+        //! Insert a point that is outside the mesh.
+        void insert_outside(const Point& p, IndexType i_face);
+
+        //! Iterative delaunay triangulation
+        void lawson(IndexType i_vertex);
 
         //! Returns true if i_face is an infinite faces, false otherwise. 
         bool is_inf_face(IndexType i_face) const;
 
-        //! Locate the triangle that contains p : <in_a_face (infinite face excluded), <face index, edge index>>
-        std::pair<bool, std::pair<int, int>> locate_triangle(const Point& p) const; 
+        //! Use for infinite faces, they must have the infinite point (of index 0) as first vertex (local index 0). This method check if the infinite face is well constructed, if not it do the necessary operation. 
+        void slide_triangle(IndexType i_face);
 
         //! Splits a triangle face into three by insertion of a new vertex that is located at the position provided in parameter.
         void triangle_split(const Point &p, IndexType i_face);
@@ -116,14 +134,8 @@ namespace gam
         //! Splits an edge into two by insertion of a new vertex that is located at the position provided in parameter. The incident faces are also divided into two faces.
         void edge_split(const Point &p, IndexType i_face, IndexType i_edge);
 
-        //! Insert a point that is outside the mesh.
-        void insert_outside(const Point& p, IndexType i_face);
-
-        //! Calculate cotangente Laplacian value at vertex of index i_vertex.
-        ScalarType laplacian(IndexType i_vertex);
-
-        //! Calculate the normal of a vertex using the cotangent Laplacian.
-        Vector laplacian_vector(IndexType i_vertex);
+        //! Checking the delaunay triangulation.
+        void delaunay_check() const;
 
         //! Checking the integrity of the mesh structure.
         void integrity_check() const;

@@ -128,23 +128,17 @@ int Viewer::init_laplacian_demo()
 
 int Viewer::init_delaunay_demo()
 {
-    points = utils::read_point_set("/blue_noise.txt", 100., 100.);
+    points = utils::read_point_set("/noise_random_2.txt");
 
-    // points.emplace_back(1.0, .0, .0);
-    // points.emplace_back(1.0, 1.0, .0);
-    // points.emplace_back(0.0, 1.0, .0);
-    // points.emplace_back(2.0, 2.0, .0);
-    // points.emplace_back(0.0, -1.0, .0);
-    // points.emplace_back(1., -2., .0);
-    // points.emplace_back(-2., 0., .0);
-    // points.emplace_back(0., 0., 0.);
-    // points.emplace_back(0.25, 0.25, 0.);
-    // points.emplace_back(.5, .5, 0.);
-    
-    auto rng = std::default_random_engine {};
-    std::shuffle(std::begin(points), std::end(points), rng);
+    // auto rng = std::default_random_engine {};
+    // std::shuffle(std::begin(points), std::end(points), rng);
 
+    m_timer.start();
     m_delaunay.insert_vertices(points);
+    m_timer.stop();
+
+    m_dttms = m_timer.ms();
+    m_dttus = m_timer.us();
 
     m_blue_noise = m_delaunay.mesh();
 
@@ -384,6 +378,8 @@ int Viewer::render_delaunay_demo()
             glPolygonOffset(1.0, 1.0);
             glDepthFunc(GL_LESS);
 
+            GLuint location = glGetUniformLocation(m_program_2, "uMeshColor");
+            glUniform4fv(location, 1, &m_mesh_color[0]);
             m_blue_noise.draw(m_program_2, true, false, false, true, false);
             glDisable(GL_POLYGON_OFFSET_FILL);
         }
@@ -428,8 +424,7 @@ int Viewer::render_laplacian_params()
         m_laplacian.vertex_value(0, 100);
         m_laplacian.smooth_normals();
         m_laplacian.curvature();
-        m_laplacian.save_obj(m_obj_file, true);
-        m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+        m_object = m_laplacian.mesh();
 
         center_camera(m_object);
     }
@@ -443,8 +438,7 @@ int Viewer::render_laplacian_params()
         if (m_show_heat_diffusion)
         {
             m_laplacian.curvature();
-            m_laplacian.save_obj(m_obj_file, true);
-            m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+            m_object = m_laplacian.mesh();
             m_show_heat_diffusion = false;
         }
     }
@@ -453,8 +447,7 @@ int Viewer::render_laplacian_params()
         if (m_show_curvature)
         {
             m_laplacian.reset_values();
-            m_laplacian.save_obj(m_obj_file);
-            m_object = read_mesh(std::string(OBJ_DIR) + m_obj_file);
+            m_object = m_laplacian.mesh(false);
             m_show_curvature = false;
         }
     }
@@ -492,6 +485,7 @@ int Viewer::render_delaunay_stats()
 {
     ImGui::Text("#vertices : %i", m_blue_noise.vertex_count());
     ImGui::Text("#triangles : %i", m_blue_noise.triangle_count());
+    ImGui::Text("Triangulation time : %i ms %i us", m_dttms, m_dttus);
 
     return 0;
 }

@@ -82,6 +82,10 @@ namespace gam
     {
     }
 
+    Vertex::Vertex(ScalarType x, ScalarType y, ScalarType z, int i_face) : X(x), Y(y), Z(z), FaceIndex(i_face)
+    {
+    }
+
     std::ostream &operator<<(std::ostream &out, const Vertex &V)
     {
         out << "Vertex : [" << V.X << ", " << V.Y << ", " << V.Z << "]";

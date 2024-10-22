@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils.h"
+#include "Utils.h"
 
 namespace gam
 {
@@ -8,6 +8,7 @@ namespace gam
     {
         Vertex() = default;
         Vertex(const Point &point, int i_face = -1);
+        Vertex(ScalarType x, ScalarType y, ScalarType z, int i_face = -1);
 
         ScalarType X{0}, Y{0}, Z{0};
         int FaceIndex{-1};
@@ -44,7 +45,7 @@ namespace gam
 
         int get_edge(IndexType i_face) const;
 
-        int Vertices[3]{-1, -1, -1};
+        int Vertices[3] {-1, -1, -1};
         int Neighbors[3]{-1, -1, -1};
     };
 

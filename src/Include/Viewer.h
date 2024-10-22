@@ -4,7 +4,7 @@
 #include "Framebuffer.h"
 #include "TMesh.h"
 #include "Timer.h"
-#include "utils.h"
+#include "Utils.h"
 
 class Viewer : public App
 {
@@ -57,7 +57,7 @@ private:
 
     Framebuffer m_framebuffer;
 
-    Timer m_timer; 
+    Timer m_timer;
 
     float m_clear_color[3]{0.678f, 0.686f, 0.878f};
     float m_mesh_color[4]{1.0f, 0.0f, 0.0f, 1.0f};
@@ -85,6 +85,9 @@ private:
     bool m_show_edges{false};
     bool m_show_points{false};
 
-    int idx {3};
+    int m_dttms{0};
+    int m_dttus{0};
+
+    int idx{3};
     std::vector<Point> points;
 };

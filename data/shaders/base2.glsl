@@ -31,7 +31,7 @@ uniform vec4 uLightColor = vec4(1, 1, 1, 1);
 uniform vec4 uMeshColor = vec4(1, 1, 1, 1);
 
 void main() {
-	vec4 color = vColor;
+	vec4 color = uMeshColor;
 
 	vec3 t = normalize(dFdx(vPosition));
 	vec3 b = normalize(dFdy(vPosition));
@@ -41,11 +41,11 @@ void main() {
 	float cos_theta = max(0, dot(normal, normalize(uLight-vPosition)));
 	color = color*uLightColor;
 
-	// if(gl_FrontFacing==false) {
-	// 	ivec2 pixel = ivec2(gl_FragCoord.xy/4)%ivec2(2, 2);
-	// 	if((pixel.x^pixel.y)==0)
-	// 		color = vec4(0.8, 0.4, 0, 1);
-	// }
+	if(gl_FrontFacing==false) {
+		ivec2 pixel = ivec2(gl_FragCoord.xy/4)%ivec2(2, 2);
+		if((pixel.x^pixel.y)==0)
+			color = vec4(0.8, 0.4, 0, 1);
+	}
 
 	color.rgb = color.rgb*cos_theta;
 
