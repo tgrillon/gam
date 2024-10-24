@@ -142,3 +142,54 @@ L'application permet d'afficher les normales aux sommets ainsi que les normales 
 
 Pour calculer la courbure, on prend la norme du vecteur calculé en utilisant le laplacien et on normalise cette valeur entre 0 et 1 (pour pouvoir l'utiliser par la suite comme coordonnées de texture) en la divisant par le maximum. On obtient ceci :  
 ![Courbure](./data/rapport/courbure.png "Courbure")
+
+# Triangulation de Delaunay
+
+## Fonctions de couture
+
+Pour effectuer une insertion de point dans le maillage, on a besoin de créer trois méthodes de couture :
+- **triangle_split** : coupe un triangle en trois. Cette methode est utilisée lorsque le point inséré se trouve à l'intérieur d'une des faces d'une maillage.    
+- **edge_split** : coupe en deux les faces adjacentes à l'arête sur laquelle le point est inséré.
+- **flip_edge** : Utilisée lorsque un point est inséré hors de l'enveloppe convexe et dans l'algorithme de Lawson pour la triangulation de Delaunay.    
+
+### Triangle Split 
+
+```c++
+// Insertion du point p à l'intérieur de la face d'indice i_face.
+void triangle_split(const Point& p, IndexType i_face) 
+// p -> Le point que l'on veut insérer.
+// i_face -> L'indice de la face contenant p.
+{    
+    auto face = m_faces[i_face]; // Récupération de la face d'indice i_face.
+    int i_vertex = vertex_count(); // Récupération de l'indice du point que l'on veut insérer.
+
+    m_vertices.emplace_back(p, i_face); // Ajout du point dans le maillage.
+
+    // Récupération de l'indice des deux nouvelles faces que l'on veut ajouter.
+    IndexType i_face2 = face_count(); 
+    IndexType i_face3 = face_count() + 1;
+
+    // Mise à jour de la topologie de la face i_face.
+    m_faces[i_face][2] = i_vertex;
+    m_faces[i_face](0) = i_face2;
+    m_faces[i_face](1) = i_face3;
+
+    // Ajout des deux nouvelles faces.
+    m_faces.emplace_back(face[1], face[2], i_vertex, i_face3, i_face, face(0));
+    m_faces.emplace_back(face[2], face[0], i_vertex, i_face, i_face2, face(1));
+
+    // Mise à jour l'indice de la face adjacente du point qui n'appartient plus à i_face.
+    m_vertices[face[2]].FaceIndex = i_face2;
+
+    // Mise à jour des faces voisines.
+    m_faces[face(0)].change_neighbor(i_face, i_face2);
+    m_faces[face(1)].change_neighbor(i_face, i_face3);
+}
+```
+
+### Edge Split 
+### Flip Edge
+## Insertion naïve
+### Localisation du triangle contenant le point.
+### Insertion d'un point en dehors de l'enveloppe convexe.
+## Triangulation de Delaunay iterative (Lawson)
