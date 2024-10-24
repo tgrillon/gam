@@ -309,6 +309,9 @@ void TMesh::flip_edge(IndexType i_face0, IndexType i_edge0)
 
 // TODO 
 
+![localisation de triangle](./data/rapport/triangle_location.png)
+
+
 ### Insertion d'un point en dehors de l'enveloppe convexe.
 
 // TODO 
