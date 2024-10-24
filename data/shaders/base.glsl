@@ -14,11 +14,9 @@ out vec2 vTexcoord;
 uniform mat4 uMvMatrix;
 uniform mat4 uMvpMatrix;
 uniform mat4 uNormalMatrix;
-uniform float uPointSize;
 
 void main() {
 	gl_Position = uMvpMatrix*vec4(aPosition, 1);
-	gl_PointSize = uPointSize;
 
 	vTexcoord = aTexcoord;
 	vNormal = mat3(uNormalMatrix)*aNormal;

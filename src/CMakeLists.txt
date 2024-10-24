@@ -8,7 +8,6 @@ add_executable(${PROJECT_NAME} main.cpp
                                ${SOURCE_DIR}/Window.cpp
                                ${SOURCE_DIR}/App.cpp
                                ${SOURCE_DIR}/Framebuffer.cpp
-                               ${SOURCE_DIR}/Delaunay.cpp
                                ${SOURCE_DIR}/Timer.cpp
                                ${SOURCE_DIR}/pch.cpp
 
@@ -19,7 +18,6 @@ add_executable(${PROJECT_NAME} main.cpp
                                ${INCLUDE_DIR}/Window.h
                                ${INCLUDE_DIR}/App.h
                                ${INCLUDE_DIR}/Framebuffer.h
-                               ${INCLUDE_DIR}/Delaunay.h
                                ${INCLUDE_DIR}/Timer.h
                                ${INCLUDE_DIR}/pch.h
                                )
