@@ -87,11 +87,13 @@ private:
     bool m_show_points{false};
 
     bool m_show_infinite_faces{false};
+    bool m_shuffle{false};
 
     int m_dttms{0}; //! Delaunay Triangulation Time (ms)
     int m_dttus{0}; //! Delaunay Triangulation Time (us)
 
-    int idx{3};
+    int point_count{-1};
+    int loading_percentage{100};
     std::vector<Point> points;
 
     ImVec2 window_min, window_max;

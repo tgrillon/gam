@@ -746,9 +746,11 @@ namespace gam
 #endif
     }
 
-    void TMesh::insert_vertices(const std::vector<Point> &points)
+    void TMesh::insert_vertices(const std::vector<Point> &points, int point_count)
     {
         clear();
+
+        if (point_count == -1) point_count = points.size();
 
         m_values.reserve(points.size());
         for (const auto& p : points)
@@ -773,7 +775,7 @@ namespace gam
         m_faces.emplace_back(0, 3, 2, 0, 1, 3);
         m_faces.emplace_back(0, 1, 3, 0, 2, 1);
 
-        for (int i = 3; i < points.size(); ++i)
+        for (int i = 3; i < point_count; ++i)
         {
             insert_vertex(points[i].x, points[i].y, 0.0);
         }

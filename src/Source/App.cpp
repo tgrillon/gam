@@ -79,9 +79,9 @@ int App::prerender()
 
     const char *orbiter_filename = "app_orbiter.txt";
     // copy / export / write orbiter
-    if (key_state('c'))
+    if (key_state('o'))
     {
-        clear_key_state('c');
+        clear_key_state('o');
         m_camera.write_orbiter(orbiter_filename);
     }
     // paste / read orbiter
@@ -99,10 +99,10 @@ int App::prerender()
     }
 
     // screenshot
-    if (key_state('s'))
+    if (key_state(SDLK_F1))
     {
         static int calls = 1;
-        clear_key_state('s');
+        clear_key_state(SDLK_F1);
         screenshot("app", calls++);
     }
 
@@ -234,9 +234,6 @@ int App::init_imgui()
 
     // ImGui::LoadIniSettingsFromMemory((std::string(CMAKE_SOURCE_DIR) + "/imgui.ini").c_str());
     // io.WantSaveIniSettings= true;
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsClassic();
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle &style = ImGui::GetStyle();

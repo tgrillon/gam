@@ -4,10 +4,10 @@ namespace utils
 {
     std::vector<Point> read_point_set(const std::string &filename, float x_scale, float y_scale, float z_scale)
     {
-        std::ifstream file(std::string(DATA_DIR) + filename);
+        std::ifstream file(std::string(CLOUD_DIR) + filename);
         if (!file.is_open())
         {
-            error("[read_point_set] Couldn't open this file : ", std::string(DATA_DIR) + filename);
+            error("[read_point_set] Couldn't open this file : ", std::string(CLOUD_DIR) + filename);
             exit(1);
         }
 

@@ -98,7 +98,7 @@ namespace gam
         //! Flips the edge opposed to the vertex of local index i_edge within the face of index i_face.
         void flip_edge(IndexType i_face, IndexType i_edge);
 
-        void insert_vertices(const std::vector<Point>& vertices);
+        void insert_vertices(const std::vector<Point>& vertices, int point_count=-1);
 
         //! Clear the data structure.
         void clear();

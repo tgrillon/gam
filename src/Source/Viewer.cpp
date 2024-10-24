@@ -127,24 +127,16 @@ int Viewer::init_laplacian_demo()
 
 int Viewer::init_delaunay_demo()
 {
-    // points = utils::read_point_set("/alpes_random_2.txt");
+    points = utils::read_point_set("/blue_noise.txt");
 
-    // auto rng = std::default_random_engine {};
-    // std::shuffle(std::begin(points), std::end(points), rng);
-
-    points.emplace_back(1.0, .0, .0);
-    points.emplace_back(1.0, 1.0, .0);
-    points.emplace_back(0.0, 1.0, .0);
-    points.emplace_back(2.0, 2.0, .0);
-    points.emplace_back(0.0, -1.0, .0);
-    points.emplace_back(1., -2., .0);
-    points.emplace_back(-2., 0., .0);
+    auto rng = std::default_random_engine {};
+    std::shuffle(std::begin(points), std::end(points), rng);
 
     m_timer.start();
     m_delaunay.insert_vertices(points);
     m_timer.stop();
 
-    idx = m_delaunay.vertex_count() == 0 ? 0 : m_delaunay.vertex_count() - 1;
+    point_count = m_delaunay.vertex_count() == 0 ? 0 : m_delaunay.vertex_count() - 1;
 
     m_dttms = m_timer.ms();
     m_dttus = m_timer.us();
@@ -197,9 +189,9 @@ int Viewer::handle_events()
             m_show_faces = !m_show_faces;
         }
 
-        if (key_state(SDLK_k))
+        if (key_state(SDLK_s))
         {
-            clear_key_state(SDLK_k);
+            clear_key_state(SDLK_s);
             m_show_smooth_normal = !m_show_smooth_normal;
         }
 
@@ -209,9 +201,9 @@ int Viewer::handle_events()
             m_show_normal_color = !m_show_normal_color;
         }
 
-        if (key_state(SDLK_w))
+        if (key_state(SDLK_c))
         {
-            clear_key_state(SDLK_w);
+            clear_key_state(SDLK_c);
             if (m_show_heat_diffusion)
             {
                 m_laplacian.curvature();
@@ -231,6 +223,12 @@ int Viewer::handle_events()
                 m_show_curvature = false;
             }
             m_show_heat_diffusion = !m_show_heat_diffusion;
+        }
+
+        if (key_state(SDLK_TAB))
+        {
+            clear_key_state(SDLK_TAB);
+            m_show_ui = !m_show_ui;
         }
 
         if (m_delaunay_demo && key_state(SDLK_LCTRL))
@@ -474,7 +472,8 @@ int Viewer::render_laplacian_params()
     // ImGui::InputText("Obj name", );
     ImGui::Checkbox("Show normals (n)", &m_show_normals);
     ImGui::Checkbox("Normal color (m)", &m_show_normal_color);
-    if (ImGui::Checkbox("Curvature (w)", &m_show_curvature))
+    ImGui::Checkbox("Smooth shading (s)", &m_show_smooth_normal);
+    if (ImGui::Checkbox("Curvature (c)", &m_show_curvature))
     {
         if (m_show_heat_diffusion)
         {
@@ -515,13 +514,11 @@ int Viewer::render_delaunay_params()
     {
         center_camera(m_blue_noise);
     }
-    ImGui::BeginDisabled(idx >= points.size());
+    ImGui::BeginDisabled(point_count >= points.size());
     if (ImGui::Button("Next insertion", ImVec2(-FLT_MIN, 35.0f)))
     {
-        // m_delaunay.insert_vertex({uniform(rng), uniform(rng), 0.f});
-        m_delaunay.insert_vertex(points[idx++]);
+        m_delaunay.insert_vertex(points[point_count++]);
         m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
-        center_camera(m_blue_noise);
     }
     ImGui::EndDisabled();
 
@@ -531,14 +528,22 @@ int Viewer::render_delaunay_params()
     }
 
     ImGui::InputTextWithHint("Points cloud", "ex : alpes_random_2", &m_file_cloud);
+    ImGui::SliderInt("Loading percentage (%)", &loading_percentage, 0, 100);
+    ImGui::Checkbox("Shuffle", &m_shuffle);
     if (ImGui::Button("Load points cloud", ImVec2(-FLT_MIN, 35.0f)))
     {
         points = utils::read_point_set("/" + m_file_cloud + ".txt");
-        m_timer.start();
-        m_delaunay.insert_vertices(points);
-        m_timer.stop();
+        point_count = static_cast<int>(loading_percentage * 0.01f * points.size());
 
-        idx = m_delaunay.vertex_count() == 0 ? 0 : m_delaunay.vertex_count() - 1;
+        if (m_shuffle)
+        {
+            auto rng = std::default_random_engine {};
+            std::shuffle(std::begin(points), std::end(points), rng);
+        }
+
+        m_timer.start();
+        m_delaunay.insert_vertices(points, point_count);
+        m_timer.stop();
 
         m_dttms = m_timer.ms();
         m_dttus = m_timer.us();
@@ -569,7 +574,7 @@ int Viewer::render_ui()
         return -1;
     }
 
-    ImGui::Begin("Scene");
+    ImGui::Begin("Viewport");
 
     if (ImGui::IsWindowHovered())
     {
@@ -611,7 +616,7 @@ int Viewer::render_ui()
 
     if (m_show_ui)
     {
-        ImGui::Begin("Parameters");
+        ImGui::Begin("Control Panel");
 
         render_demo_buttons();
 
@@ -634,7 +639,7 @@ int Viewer::render_ui()
         ImGui::ColorPicker3("Points", &m_points_color[0]);
         ImGui::End();
 
-        ImGui::Begin("Statistiques");
+        ImGui::Begin("Statistics");
         ImGui::SeparatorText("PERFORMANCES");
         auto [cpums, cpuus] = cpu_time();
         auto [gpums, gpuus] = gpu_time();
@@ -707,7 +712,7 @@ int Viewer::render_menu_bar()
     {
         // ImGui::MenuItem("Style Editor", NULL, &m_show_style_editor);
         ImGui::MenuItem("Exit", NULL, &m_exit);
-        ImGui::MenuItem(m_show_ui ? "Hide UI" : "Show UI", NULL, &m_show_ui);
+        ImGui::MenuItem(m_show_ui ? "Hide UI (TAB)" : "Show UI (TAB)", NULL, &m_show_ui);
         if (ImGui::MenuItem(m_dark_theme ? "Light Theme" : "Dark Theme", NULL, &m_dark_theme))
         {
             if (m_dark_theme)

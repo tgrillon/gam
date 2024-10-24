@@ -36,9 +36,9 @@ int AppCamera::prerender( )
 
     const char *orbiter_filename= "app_orbiter.txt";
     // copy / export / write orbiter
-    if(key_state('c'))
+    if(key_state('o'))
     {
-        clear_key_state('c');
+        clear_key_state('o');
         m_camera.write_orbiter(orbiter_filename);
         
     }
@@ -56,10 +56,10 @@ int AppCamera::prerender( )
     }
     
     // screenshot
-    if(key_state('s'))
+    if(key_state(SDLK_F1))
     {
         static int calls= 1;
-        clear_key_state('s');
+        clear_key_state(SDLK_F1);
         screenshot("app", calls++);
     }
     
