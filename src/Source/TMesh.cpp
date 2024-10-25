@@ -748,6 +748,8 @@ namespace gam
 
     void TMesh::insert_vertices(const std::vector<Point> &points, int point_count)
     {
+        assert(points.size() >= 3);
+
         clear();
 
         if (point_count == -1) point_count = points.size();
@@ -760,11 +762,8 @@ namespace gam
 
         m_vertices.reserve(points.size() + 1);
 
-        // Insertion du point infini
-        Point inf_point(0., 0., -1);
-        m_vertices.emplace_back(inf_point, 1);
+        m_vertices.emplace_back(0., 0., -1., 1);
         
-        // Ajouer suffisamment de point pour former un triangle
         m_vertices.emplace_back(points[0].x, points[0].y, 0, 0);
         m_vertices.emplace_back(points[1].x, points[1].y, 0, 0);
         m_vertices.emplace_back(points[2].x, points[2].y, 0, 0);

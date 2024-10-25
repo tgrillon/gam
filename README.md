@@ -187,11 +187,11 @@ Pour effectuer une insertion de point dans le maillage, on a besoin de créer tr
 ```c++
 // Insertion du point p à l'intérieur de la face d'indice i_face.
 void triangle_split(const Point& p, IndexType i_face) 
-// p -> Le point que l'on veut insérer.
-// i_face -> L'indice de la face contenant p.
+// p : Le point que l'on veut insérer.
+// i_face : L'indice de la face contenant p.
 {  
-    auto face = m_faces[i_face]; // Récupération de la face d'indice i_face.
-    int i_vertex = vertex_count(); // Récupération de l'indice du point que l'on veut insérer.
+    Face face = m_faces[i_face]; // Récupération d'une copie de la face d'indice i_face.
+    IndexType i_vertex = vertex_count(); // Récupération de l'indice du point que l'on veut insérer.
 
     m_vertices.emplace_back(p, i_face); // Ajout du point dans le maillage.
 
@@ -220,7 +220,7 @@ void triangle_split(const Point& p, IndexType i_face)
 ##### Résultat :
 
 ![triangle split](./data/rapport/triangle_split_result.png)
-**Note** : le point qui n'est pas relié au maillage est le point à l'infinie.
+**Note** : Le point qui n'est pas relié au maillage est le point à l'infinie.
 
 
 ### Edge Split
@@ -230,39 +230,54 @@ void triangle_split(const Point& p, IndexType i_face)
 ###### Code : 
 
 ```c++
+// Insertion du point p sur une arête. faisant partie de la face i_face0 (l'arête joint deux triangles, face0 est l'une des deux), opposée à l'indice local d'indice i_edge0.
 void TMesh::edge_split(const Point &p, IndexType i_face0, IndexType i_edge0)
+// p : point que l'on veut insérer. 
+// i_face0 : indice d'une des deux faces contenant l'arête. 
+// i_edge0 : indice local du sommet opposé à l'arête dans la face i_face0. 
 {
-    IndexType i_vertex = vertex_count();
-    m_vertices.emplace_back(p, i_face0);
+    IndexType i_vertex = vertex_count(); // Récupération de l'indice du point que l'on veut insérer.
 
-    IndexType i_face2 = face_count();
+    m_vertices.emplace_back(p, i_face0); // Ajout du point dans le maillage. 
+
+    // Récupération des indices des deux nouvelles faces qui vont être créées.
+    IndexType i_face2 = face_count();  
     IndexType i_face3 = face_count() + 1;
 
-    IndexType i_face1 = m_faces[i_face0](i_edge0);
-    IndexType i_edge1 = m_faces[i_face1].get_edge(i_face0);
+    
+    IndexType i_face1 = m_faces[i_face0](i_edge0); // Récupération de la seconde face comportant l'arête. 
+    IndexType i_edge1 = m_faces[i_face1].get_edge(i_face0); // Récupération de l'indice local du sommet opposée à l'arête dans la seconde face. 
 
-    Face face0 = m_faces[i_face0];
-    Face face1 = m_faces[i_face1];
+    // Récupération d'une copie de chaque face (elles sont utilisées pour construire les nouvelles faces et mettre à jour les anciennes). 
+    Face face0 = m_faces[i_face0];  
+    Face face1 = m_faces[i_face1]; 
 
+    // Mise à jour de la face 0.
     m_faces[i_face0].vertices(face0[i_edge0], face0[(i_edge0 + 1) % 3], i_vertex);
     m_faces[i_face0].neighbors(face0(i_edge0), i_face3, face0((i_edge0 + 2) % 3));
 
+    // Mise à jour de la face 1.
     m_faces[i_face1].vertices(face1[i_edge1], i_vertex, face1[(i_edge1 + 2) % 3]);
     m_faces[i_face1].neighbors(face1(i_edge1), face1((i_edge1 + 1) % 3), i_face2);
 
+    // Créatrion des deux nouvelles faces.
     m_faces.emplace_back(face1[i_edge1], face1[(i_edge1 + 1) % 3], i_vertex, i_face3, i_face1, face1((i_edge1 + 2) % 3));
     m_faces.emplace_back(face0[i_edge0], i_vertex, face0[(i_edge0 + 2) % 3], i_face2, face0((i_edge0 + 1) % 3), i_face0);
 
+    // Un seul sommet à besoin d'être mis à jour. 
     m_vertices[face0[(i_edge0 + 2) % 3]].FaceIndex = i_face2;
 
+    // Mise à jour des faces voisines. 
     m_faces[face0((i_edge0 + 1) % 3)].change_neighbor(i_face0, i_face3);
     m_faces[face1((i_edge1 + 2) % 3)].change_neighbor(i_face1, i_face2);
 }
 ```
 
+**Note** : Lors de la création des nouvelles faces et la mises à jour des faces déjà existantes, on s'assure que le sommet d'indice local zéro est le sommet opposé à la face. Cela permet par la suite que le découpage d'une face infinie garantie que le sommet à l'infinie (sommet d'indice zéro dans la liste des sommets du maillage) soit d'indice local zéro dans les deux nouvelles faces infinies. Cela nous facilitera la vie plus tard. 
+
 ###### Résultat :
 
-![edge split](./data/rapport/edge_split_result.png)
+![edge split](./data/rapport/edge_split_result.png) 
 
 ### Flip Edge
 
@@ -271,14 +286,19 @@ void TMesh::edge_split(const Point &p, IndexType i_face0, IndexType i_edge0)
 ##### Code : 
 
 ```c++
+// Basculer une arête.
 void TMesh::flip_edge(IndexType i_face0, IndexType i_edge0)
+// i_face0 : indice d'une des deux faces contenant l'arête. 
+// i_edge0 : indice local du sommet opposé à l'arête dans la face i_face0. 
 {
-    IndexType i_face1 = m_faces[i_face0](i_edge0);
-    IndexType i_edge1 = m_faces[i_face1].get_edge(i_face0);
+    IndexType i_face1 = m_faces[i_face0](i_edge0); // Récupération de l'indice de la seconde face contenant l'arête. 
+    IndexType i_edge1 = m_faces[i_face1].get_edge(i_face0); // Récupération de l'indice local du sommet opposé à l'arête. 
 
+    // Récupération d'une copie de chaque face. 
     Face face0 = m_faces[i_face0];
     Face face1 = m_faces[i_face1];
 
+    // Mise à jour de la face 0.
     m_faces[i_face0][0] = face0[i_edge0];
     m_faces[i_face0][1] = face0[(i_edge0 + 1) % 3];
     m_faces[i_face0][2] = face1[i_edge1];
@@ -286,6 +306,7 @@ void TMesh::flip_edge(IndexType i_face0, IndexType i_edge0)
     m_faces[i_face0](1) = i_face1;
     m_faces[i_face0](2) = face0((i_edge0 + 2) % 3);
 
+    // Mise à jour de la face 1.
     m_faces[i_face1][0] = face1[i_edge1];
     m_faces[i_face1][1] = face1[(i_edge1 + 1) % 3];
     m_faces[i_face1][2] = face0[i_edge0];
@@ -293,28 +314,74 @@ void TMesh::flip_edge(IndexType i_face0, IndexType i_edge0)
     m_faces[i_face1](1) = i_face0;
     m_faces[i_face1](2) = face1((i_edge1 + 2) % 3);
 
+    // Mise à jour des deux sommets qui ont changés de face. 
     m_vertices[face0[(i_edge0 + 1) % 3]].FaceIndex = i_face0;
     m_vertices[face1[(i_edge1 + 1) % 3]].FaceIndex = i_face1;
 
+    // Mise à jour des voisins. 
     m_faces[face0((i_edge0 + 1) % 3)].change_neighbor(i_face0, i_face1);
     m_faces[face1((i_edge1 + 1) % 3)].change_neighbor(i_face1, i_face0);
 }
 ```
+**Note** : On définit la nouvelle topologie de chaque face en partant des sommets opposés à l'arête. Cela nous assure que les nouvelles faces seront orientées dans le sens anti-horaire (trigonométrique) peut importe la configuration initiale.  
 
 ## Insertion naïve
 
-// TODO 
+Dans un premier temps, une insertion naïve des points a été implémentée (on insert les points sans s'assurer de la qualité des triangles résultants). Deux choses sont à mettre en place pour pouvoir insérer un point dans le maillage :
+- Localiser le triangle / l'arête contenant le point que l'on souhaite inséré. 
+- Gérer l'insertion en dehors de l'enveloppe convexe.    
 
 ### Localisation du triangle contenant le point.
 
-// TODO 
+Une première méthode "bourrine" consiste simplement à parcourir tous les triangles du maillage en faisant des testes d'orientation et en s'arrêtant une fois la face trouvé. Mais on peut faire beaucoup mieux. Plutôt que de parcourir toutes les faces du maillage, on part de la face d'indice 0 et on fait des tests d'orientations sur les triangles formés par les arêtes de cette même face et le point inséré. L'idée est d'effectuer un à maximum deux tests d'orientation par triangle (sauf pour la première face où trois tests peuvent être effectué). 
 
-![localisation de triangle](./data/rapport/triangle_location.png)
+Si le triangle construit par l'une des arêtes de la face et du point à inséré est orienté dans le sens trigonométrique, alors le point est nécessairement en dehors de la face. Sinon, on test l'arête suivante. 
 
+Si toutes les arêtes de la face ont étés testées et qu'aucun triangle construit par ces arêtes n'est orienté dans le sens trigonométrique, alors le point se trouve à l'intérieur de la face. 
+
+Un cas particulier concernant la présence du point à insérer sur une des arêtes de la face est à considérer. Le test d'orientation est un simple calcul de déterminant de la matrice suivante :
+
+![predicat d'orientation](./data/rapport/orientation.png)
+
+avec $p$, $q$ et $r$ les sommets du triangle. 
+
+Ce test d'orientation retourne 1 si le triangle est orienté dans le sens trigonométrique, -1 si orienté dans le sens horaire et 0 si les points sont colinéaires. Dans nos test d'orientation lors de la recherche de la face qui contient le point à insérer, il peut arriver que le point soit aligné avec l'une des arêtes de la face considérée sans pour autant être à l'intérieur de cette même face. 
+
+![cas particulier](./data/rapport/locate_triangle2.png)
+
+Sur le schéma ci-dessus, le point est aligné avec l'arête de la face mais ne se situe pas à l'intérieur. On doit donc vérifier l'arête suivant pour déterminer si oui ou non le point est à l'intérieur de la face. 
+
+Voici une illustration de l'algorithme pour la première face :
+
+![localisation de triangle](./data/rapport/locate_triangle.png)
+
+
+Le processus est répété jusqu'à ce que le triangle contenant le point soit trouvé, ou bien que le triangle courrant soit une face infinie. 
 
 ### Insertion d'un point en dehors de l'enveloppe convexe.
 
-// TODO 
+Avant de gérer l'insertion des points dans le maillage, on construit la première face / le premier triangle ainsi que les trois faces infinies voisines : 
+
+```c++
+
+// Ajout du point à l'infinie (indice 0)
+m_vertices.emplace_back(0., 0., -1., 1); 
+
+// Ajout des trois premiers sommets. 
+m_vertices.emplace_back(points[0].x, points[0].y, 0, 0); 
+m_vertices.emplace_back(points[1].x, points[1].y, 0, 0);
+m_vertices.emplace_back(points[2].x, points[2].y, 0, 0);
+
+// Construction de la première face.
+m_faces.emplace_back(1, 2, 3, 2, 3, 1);
+
+// Construction des faces infinies. 
+m_faces.emplace_back(0, 2, 1, 0, 3, 2);
+m_faces.emplace_back(0, 3, 2, 0, 1, 3);
+m_faces.emplace_back(0, 1, 3, 0, 2, 1);
+```
+
+
 
 ## Triangulation de Delaunay : Methode iterative (Lawson)
 

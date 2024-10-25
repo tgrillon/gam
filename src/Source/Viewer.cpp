@@ -97,10 +97,10 @@ int Viewer::init_programs()
         return -1;
     }
 
-    m_program_points = read_program(std::string(SHADER_DIR) + "/points.glsl");
+    m_program_points = read_program(std::string(SHADER_DIR) + "/m_points.glsl");
     if (program_print_errors(m_program_points) < 0)
     {
-        utils::error("in [read_program] for", std::string(SHADER_DIR) + "/points.glsl");
+        utils::error("in [read_program] for", std::string(SHADER_DIR) + "/m_points.glsl");
         return -1;
     }
 
@@ -127,25 +127,31 @@ int Viewer::init_laplacian_demo()
 
 int Viewer::init_delaunay_demo()
 {
-    points = utils::read_point_set("/blue_noise.txt");
+    m_file_cloud = "blue_noise"; 
+    m_points = utils::read_point_set("/blue_noise.txt");
+
+    // m_points.emplace_back(-1.5, -1.5, 0.);
+    // m_points.emplace_back(1., -1., 0.);
+    // m_points.emplace_back(1.5, 1.5, 0.);
+    // m_points.emplace_back(-1., 1., 0.);
 
     auto rng = std::default_random_engine {};
-    std::shuffle(std::begin(points), std::end(points), rng);
+    std::shuffle(std::begin(m_points), std::end(m_points), rng);
 
     m_timer.start();
-    m_delaunay.insert_vertices(points);
+    m_delaunay.insert_vertices(m_points);
     m_timer.stop();
 
-    point_count = m_delaunay.vertex_count() == 0 ? 0 : m_delaunay.vertex_count() - 1;
+    m_point_count = m_delaunay.vertex_count() == 0 ? 0 : m_delaunay.vertex_count() - 1;
 
     m_dttms = m_timer.ms();
     m_dttus = m_timer.us();
 
-    m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+    m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
 
     if (m_delaunay_demo)
     {
-        center_camera(m_blue_noise);
+        center_camera(m_object2);
     }
 
     return 0;
@@ -168,7 +174,7 @@ int Viewer::handle_events()
         {
             clear_key_state(SDLK_i);
             m_show_infinite_faces = !m_show_infinite_faces;
-            m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+            m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
         }
 
         if (key_state(SDLK_e))
@@ -255,7 +261,7 @@ int Viewer::handle_events()
             float time = - camera_position.z / direction.z;
             Point point = camera_position + time * direction;
             m_delaunay.insert_vertex(point);
-            m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+            m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
         }
     }
 
@@ -291,7 +297,7 @@ int Viewer::quit_any()
     m_grid.release();
     m_repere.release();
     m_object.release();
-    m_blue_noise.release();
+    m_object2.release();
     glDeleteTextures(1, &m_heat_diffusion_tex);
     release_program(m_program);
     release_program(m_program_edges);
@@ -409,7 +415,7 @@ int Viewer::render_delaunay_demo()
     program_uniform(m_program_2, "uLight", view(light));
     GLuint location = glGetUniformLocation(m_program_2, "uMeshColor");
     glUniform4fv(location, 1, &m_mesh_color[0]);
-    if (m_blue_noise.triangle_count() > 0)
+    if (m_object2.triangle_count() > 0)
     {
         if (m_show_faces)
         {
@@ -419,7 +425,7 @@ int Viewer::render_delaunay_demo()
 
             GLuint location = glGetUniformLocation(m_program_2, "uMeshColor");
             glUniform4fv(location, 1, &m_mesh_color[0]);
-            m_blue_noise.draw(m_program_2, true, false, false, true, false);
+            m_object2.draw(m_program_2, true, false, false, true, false);
             glDisable(GL_POLYGON_OFFSET_FILL);
         }
         if (m_show_edges)
@@ -431,7 +437,7 @@ int Viewer::render_delaunay_demo()
             GLint location = glGetUniformLocation(m_program_edges, "uEdgeColor");
             glUniform4fv(location, 1, &m_edges_color[0]);
 
-            m_blue_noise.draw(m_program_edges, true, false, false, false, false);
+            m_object2.draw(m_program_edges, true, false, false, false, false);
         }
     }
 
@@ -444,9 +450,9 @@ int Viewer::render_delaunay_demo()
         GLint location = glGetUniformLocation(m_program_points, "uPointColor");
         glUniform4fv(location, 1, &m_points_color[0]);
 
-        m_blue_noise.bind_vao();
+        m_object2.bind_vao();
 
-        glDrawArrays(GL_POINTS, 0, m_blue_noise.vertex_count());
+        glDrawArrays(GL_POINTS, 0, m_object2.vertex_count());
     }
 
     return 0;
@@ -512,53 +518,89 @@ int Viewer::render_delaunay_params()
     ImGui::SeparatorText("DELAUNAY PARAMS");
     if (ImGui::Button("Center camera", ImVec2(-FLT_MIN, 25.0f)))
     {
-        center_camera(m_blue_noise);
+        center_camera(m_object2);
     }
-    ImGui::BeginDisabled(point_count >= points.size());
-    if (ImGui::Button("Next insertion", ImVec2(-FLT_MIN, 35.0f)))
-    {
-        m_delaunay.insert_vertex(points[point_count++]);
-        m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
-    }
-    ImGui::EndDisabled();
 
     if (ImGui::Checkbox("Infinite faces (i)", &m_show_infinite_faces))
     {
-        m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+        m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
+        Point pmin, pmax;
+        m_object2.bounds(pmin, pmax);
+        Point mid = center(pmin, pmax);
+        mid.z = -m_infinite_point_z;
+        m_object2.vertex(0, mid);
+    }
+
+    if(ImGui::SliderFloat("Infinite point Z", &m_infinite_point_z, 0.01, 10000.0, "%.2f"))
+    {
+        Point pmin, pmax;
+        m_object2.bounds(pmin, pmax);
+        Point mid = center(pmin, pmax);
+        mid.z = -m_infinite_point_z;
+        m_object2.vertex(0, mid);
     }
 
     ImGui::InputTextWithHint("Points cloud", "ex : alpes_random_2", &m_file_cloud);
-    ImGui::SliderInt("Loading percentage (%)", &loading_percentage, 0, 100);
+    ImGui::InputFloat("X Scale", &m_scale_x);
+    ImGui::InputFloat("Y Scale", &m_scale_y);   
+    ImGui::SliderInt("Loading percentage (%)", &m_loading_percentage, 0, 100);
     ImGui::Checkbox("Shuffle", &m_shuffle);
-    if (ImGui::Button("Load points cloud", ImVec2(-FLT_MIN, 35.0f)))
+    if (ImGui::Button("Load m_points cloud", ImVec2(-FLT_MIN, 35.0f)))
     {
-        points = utils::read_point_set("/" + m_file_cloud + ".txt");
-        point_count = static_cast<int>(loading_percentage * 0.01f * points.size());
+        m_points = utils::read_point_set("/" + m_file_cloud + ".txt", m_scale_x, m_scale_y);
+        m_point_count = static_cast<int>(m_loading_percentage * 0.01f * m_points.size());
 
         if (m_shuffle)
         {
             auto rng = std::default_random_engine {};
-            std::shuffle(std::begin(points), std::end(points), rng);
+            std::shuffle(std::begin(m_points), std::end(m_points), rng);
         }
 
         m_timer.start();
-        m_delaunay.insert_vertices(points, point_count);
+        m_delaunay.insert_vertices(m_points, m_point_count);
         m_timer.stop();
 
         m_dttms = m_timer.ms();
         m_dttus = m_timer.us();
-        m_blue_noise = m_delaunay.mesh(true, !m_show_infinite_faces);
+        m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
 
-        center_camera(m_blue_noise);
+        Point pmin, pmax;
+        m_object2.bounds(pmin, pmax);
+        Point mid = center(pmin, pmax);
+        mid.z = -m_infinite_point_z;
+        m_object2.vertex(0, mid);
+
+        center_camera(m_object2);
     }
+
+    int max_insertion_count = m_points.size() - m_object2.vertex_count() + 1;
+    ImGui::BeginDisabled(m_point_count >= m_points.size());
+    ImGui::SliderInt("Insertion count", &m_insertion_count, 1, std::max(max_insertion_count, 1));
+    if (ImGui::Button("Next insertion", ImVec2(-FLT_MIN, 35.0f)))
+    {
+        m_insertion_count = std::min(m_insertion_count, max_insertion_count);
+
+        for (int i = 0; i < m_insertion_count; ++i)
+        {
+            m_delaunay.insert_vertex(m_points[m_point_count++]);
+        }
+        m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
+
+        Point pmin, pmax;
+        m_object2.bounds(pmin, pmax);
+        Point mid = center(pmin, pmax);
+        mid.z = -m_infinite_point_z;
+        m_object2.vertex(0, mid);
+    }
+    ImGui::EndDisabled();
 
     return 0;
 }
 
 int Viewer::render_delaunay_stats()
 {
-    ImGui::Text("#vertices : %i", m_blue_noise.vertex_count());
-    ImGui::Text("#triangles : %i", m_blue_noise.triangle_count());
+    ImGui::Text("#vertices : %i", m_object2.vertex_count());
+    ImGui::Text("#triangles : %i", m_object2.triangle_count());
     ImGui::Text("Triangulation time : %i ms %i us", m_dttms, m_dttus);
 
     return 0;
@@ -693,7 +735,7 @@ int Viewer::render_demo_buttons()
         m_laplacian_demo = false;
         m_delaunay_demo = true;
 
-        center_camera(m_blue_noise);
+        center_camera(m_object2);
     }
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
     {

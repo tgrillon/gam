@@ -41,7 +41,7 @@ private:
     Mesh m_grid;
     Mesh m_object;
     Mesh m_repere;
-    Mesh m_blue_noise;
+    Mesh m_object2;
 
     gam::TMesh m_laplacian;
     gam::TMesh m_delaunay;
@@ -92,9 +92,14 @@ private:
     int m_dttms{0}; //! Delaunay Triangulation Time (ms)
     int m_dttus{0}; //! Delaunay Triangulation Time (us)
 
-    int point_count{-1};
-    int loading_percentage{100};
-    std::vector<Point> points;
+    float m_infinite_point_z{1.0};
+    float m_scale_x{1.0};
+    float m_scale_y{1.0};
+
+    int m_point_count{-1};
+    int m_insertion_count{1};
+    int m_loading_percentage{100};
+    std::vector<Point> m_points;
 
     ImVec2 window_min, window_max;
 };
