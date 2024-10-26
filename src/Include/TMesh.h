@@ -104,9 +104,6 @@ namespace gam
         void clear();
 
     private:
-        // Remove the infinite faces added for the delaunay triangulation.
-        void remove_inf_faces();
-
         //! Calculate cotangente Laplacian value at vertex of index i_vertex.
         ScalarType laplacian(IndexType i_vertex);
 
@@ -133,6 +130,9 @@ namespace gam
 
         //! Splits an edge into two by insertion of a new vertex that is located at the position provided in parameter. The incident faces are also divided into two faces.
         void edge_split(const Point &p, IndexType i_face, IndexType i_edge);
+
+        //! Check if a face is well oriented (counter-clockwise), if not, it rearange the vertices.
+        void check_orientation(Face& face);
 
         //! Checking the delaunay triangulation.
         void delaunay_check() const;

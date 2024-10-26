@@ -97,10 +97,10 @@ int Viewer::init_programs()
         return -1;
     }
 
-    m_program_points = read_program(std::string(SHADER_DIR) + "/m_points.glsl");
+    m_program_points = read_program(std::string(SHADER_DIR) + "/points.glsl");
     if (program_print_errors(m_program_points) < 0)
     {
-        utils::error("in [read_program] for", std::string(SHADER_DIR) + "/m_points.glsl");
+        utils::error("in [read_program] for", std::string(SHADER_DIR) + "/points.glsl");
         return -1;
     }
 
@@ -130,16 +130,12 @@ int Viewer::init_delaunay_demo()
     m_file_cloud = "blue_noise"; 
     m_points = utils::read_point_set("/blue_noise.txt");
 
-    // m_points.emplace_back(-1.5, -1.5, 0.);
-    // m_points.emplace_back(1., -1., 0.);
-    // m_points.emplace_back(1.5, 1.5, 0.);
-    // m_points.emplace_back(-1., 1., 0.);
-
-    auto rng = std::default_random_engine {};
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine { rd() };
     std::shuffle(std::begin(m_points), std::end(m_points), rng);
 
     m_timer.start();
-    m_delaunay.insert_vertices(m_points);
+    m_delaunay.insert_vertices(m_points, 400);
     m_timer.stop();
 
     m_point_count = m_delaunay.vertex_count() == 0 ? 0 : m_delaunay.vertex_count() - 1;
@@ -509,6 +505,15 @@ int Viewer::render_laplacian_stats()
     return 0;
 }
 
+void Viewer::set_infinite_z(Mesh& mesh)
+{
+    Point pmin, pmax;
+    mesh.bounds(pmin, pmax);
+    Point mid = center(pmin, pmax);
+    mid.z = -m_infinite_point_z;
+    mesh.vertex(0, mid);
+}
+
 int Viewer::render_delaunay_params()
 {
     std::random_device hwseed;
@@ -524,20 +529,12 @@ int Viewer::render_delaunay_params()
     if (ImGui::Checkbox("Infinite faces (i)", &m_show_infinite_faces))
     {
         m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
-        Point pmin, pmax;
-        m_object2.bounds(pmin, pmax);
-        Point mid = center(pmin, pmax);
-        mid.z = -m_infinite_point_z;
-        m_object2.vertex(0, mid);
+        set_infinite_z(m_object2);
     }
 
     if(ImGui::SliderFloat("Infinite point Z", &m_infinite_point_z, 0.01, 10000.0, "%.2f"))
     {
-        Point pmin, pmax;
-        m_object2.bounds(pmin, pmax);
-        Point mid = center(pmin, pmax);
-        mid.z = -m_infinite_point_z;
-        m_object2.vertex(0, mid);
+        set_infinite_z(m_object2);
     }
 
     ImGui::InputTextWithHint("Points cloud", "ex : alpes_random_2", &m_file_cloud);
@@ -548,11 +545,12 @@ int Viewer::render_delaunay_params()
     if (ImGui::Button("Load m_points cloud", ImVec2(-FLT_MIN, 35.0f)))
     {
         m_points = utils::read_point_set("/" + m_file_cloud + ".txt", m_scale_x, m_scale_y);
-        m_point_count = static_cast<int>(m_loading_percentage * 0.01f * m_points.size());
+        m_point_count = std::max(3, static_cast<int>(m_loading_percentage * 0.01f * m_points.size()));
 
         if (m_shuffle)
         {
-            auto rng = std::default_random_engine {};
+            auto rd = std::random_device {}; 
+            auto rng = std::default_random_engine { rd() };
             std::shuffle(std::begin(m_points), std::end(m_points), rng);
         }
 
@@ -564,12 +562,7 @@ int Viewer::render_delaunay_params()
         m_dttus = m_timer.us();
         m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
 
-        Point pmin, pmax;
-        m_object2.bounds(pmin, pmax);
-        Point mid = center(pmin, pmax);
-        mid.z = -m_infinite_point_z;
-        m_object2.vertex(0, mid);
-
+        set_infinite_z(m_object2);
         center_camera(m_object2);
     }
 
@@ -580,17 +573,24 @@ int Viewer::render_delaunay_params()
     {
         m_insertion_count = std::min(m_insertion_count, max_insertion_count);
 
+        Timer timer; 
+
+        timer.start();
         for (int i = 0; i < m_insertion_count; ++i)
         {
             m_delaunay.insert_vertex(m_points[m_point_count++]);
         }
+        timer.stop();
+
+        m_dttms += timer.ms();
+        m_dttus += timer.us();
+
+        m_dttms += m_dttus / 1000;
+        m_dttus = m_dttus % 1000;
+
         m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
 
-        Point pmin, pmax;
-        m_object2.bounds(pmin, pmax);
-        Point mid = center(pmin, pmax);
-        mid.z = -m_infinite_point_z;
-        m_object2.vertex(0, mid);
+        set_infinite_z(m_object2);
     }
     ImGui::EndDisabled();
 

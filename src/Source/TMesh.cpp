@@ -11,8 +11,10 @@ namespace gam
 
         for (int i = 0; i < vertex_count(); ++i)
         {
-            if (i == 0) mesh.color(White());
-            else mesh.color(Red());
+            if (i == 0)
+                mesh.color(White());
+            else
+                mesh.color(Red());
             if (m_normals.size() > 0)
             {
                 mesh.normal(m_normals[i]);
@@ -30,7 +32,8 @@ namespace gam
 
         for (int i = 0; i < face_count(); ++i)
         {
-            if (remove_infinite && is_infinite_face(i)) continue; 
+            if (remove_infinite && is_infinite_face(i))
+                continue;
             mesh.triangle(m_faces[i][0], m_faces[i][1], m_faces[i][2]);
         }
 
@@ -83,6 +86,7 @@ namespace gam
         {
             IndexType v0, v1, v2;
             file >> nVertices >> v0 >> v1 >> v2;
+
             // Set FaceIndex for each vertex if it's not already the case
             if (m_vertices[v0].FaceIndex == -1)
                 m_vertices[v0].FaceIndex = i;
@@ -384,19 +388,6 @@ namespace gam
         m_values.clear();
     }
 
-    void TMesh::remove_inf_faces()
-    {
-        std::vector<Face> faces; 
-        for (int i = 0; i < face_count(); ++i)
-        {
-            if (is_infinite_face(i)) continue; 
-
-            faces.emplace_back(m_faces[i][0], m_faces[i][1], m_faces[i][2], m_faces[i](0), m_faces[i](1), m_faces[i](2));
-        }
-
-        m_faces = faces;
-    }
-
     ScalarType TMesh::laplacian(IndexType i_vertex)
     {
         assert(m_values.size() == m_vertices.size());
@@ -471,9 +462,13 @@ namespace gam
         if (found) // p is in a face
         {
             if (i_edge >= 0)
+            {
                 edge_split(p, i_face, i_edge);
+            }
             else
+            {
                 triangle_split(p, i_face);
+            }
         }
         else // point is outside every faces
         {
@@ -487,24 +482,27 @@ namespace gam
     {
         auto faces = neighboring_faces_of_vertex(i_vertex);
 
-        std::stack<IndexType> stack;
+        std::stack<IndexType> to_check;
 
-        for (auto i_face : faces) stack.push(i_face);
+        for (auto i_face : faces)
+            to_check.push(i_face);
 
-        while (!stack.empty())
+        while (!to_check.empty())
         {
-            IndexType i_face0 = stack.top();
-            stack.pop();
-            if (is_infinite_face(i_face0)) continue;
+            IndexType i_face0 = to_check.top();
+            to_check.pop();
+            if (is_infinite_face(i_face0))
+                continue;
 
             Face face0 = m_faces[i_face0];
             IndexType i_edge0 = local_index(i_vertex, i_face0);
             IndexType i_face1 = face0(i_edge0);
-            if (is_infinite_face(i_face1)) continue;
+            if (is_infinite_face(i_face1))
+                continue;
 
             Face face1 = m_faces[i_face1];
             IndexType i_edge1 = face1.get_edge(i_face0);
-            
+
             Vertex p = m_vertices[face1[i_edge1]];
             Vertex a = m_vertices[face0[0]];
             Vertex b = m_vertices[face0[1]];
@@ -512,15 +510,15 @@ namespace gam
             if (in_circle(Vertex::as_point(p), Vertex::as_point(a), Vertex::as_point(b), Vertex::as_point(c)))
             {
                 flip_edge(i_face0, i_edge0);
-                stack.push(i_face0);
-                stack.push(i_face1);    
+                to_check.push(i_face0);
+                to_check.push(i_face1);
             }
         }
 
-// #ifndef NDEBUG
-//     integrity_check();
-//     utils::status("[lawson] Integrity_check passed");
-// #endif
+        // #ifndef NDEBUG
+        //     integrity_check();
+        //     utils::status("[lawson] Integrity_check passed");
+        // #endif
     }
 
     void TMesh::slide_triangle(IndexType i_face)
@@ -547,42 +545,42 @@ namespace gam
         int i_face = 0;
         int i_edge = 0;
 
-        int i_edge_to_avoid = -1; 
+        int i_edge_to_avoid = -1;
         int i_previous_face = -1;
 
-        bool f_is_inf = false; 
-        bool p_in_f = false; 
+        bool f_is_inf = false;
+        bool p_in_f = false;
         int o;
-        do 
+        do
         {
-            if (is_infinite_face(i_face)) // if its an infinite face 
+            if (is_infinite_face(i_face)) // if its an infinite face
             {
-                f_is_inf = true; 
-                continue; 
+                f_is_inf = true;
+                continue;
             }
 
             if (i_edge_to_avoid != -1)
-            { 
+            {
                 i_edge = (i_edge_to_avoid + 1) % 3;
             }
             else
             {
                 i_edge_to_avoid = i_edge;
-            } 
+            }
 
             bool p_intersect_f = false;
-            int tmp_i_edge = -1; 
+            int tmp_i_edge = -1;
             Point a = Vertex::as_point(m_vertices[m_faces[i_face][(i_edge + 2) % 3]]);
             Point b = Vertex::as_point(m_vertices[m_faces[i_face][(i_edge + 1) % 3]]);
-            while (!p_in_f && (o = orientation(a, b, p)) < 1) // clockwise or on edge 
+            while (!p_in_f && (o = orientation(a, b, p)) < 1) // clockwise or on edge
             {
-                if (o == 0) 
+                if (o == 0)
                 {
                     p_intersect_f = true;
-                    tmp_i_edge = i_edge; 
+                    tmp_i_edge = i_edge;
                 }
                 i_edge = (i_edge + 1) % 3;
-                if (i_edge == i_edge_to_avoid) 
+                if (i_edge == i_edge_to_avoid)
                 {
                     if (p_intersect_f)
                     {
@@ -592,23 +590,23 @@ namespace gam
                     {
                         i_edge = -1;
                     }
-                    p_in_f = true; 
-                    continue; 
+                    p_in_f = true;
+                    continue;
                 }
-                
+
                 a = Vertex::as_point(m_vertices[m_faces[i_face][(i_edge + 2) % 3]]);
                 b = Vertex::as_point(m_vertices[m_faces[i_face][(i_edge + 1) % 3]]);
-            } 
+            }
 
-            if (p_in_f) continue;
-            
+            if (p_in_f)
+                continue;
+
             i_previous_face = i_face;
             i_face = m_faces[i_face](i_edge);
             i_edge_to_avoid = m_faces[i_face].get_edge(i_previous_face);
         } while (!p_in_f && !f_is_inf);
 
-
-        return { !f_is_inf, { i_face, i_edge } };
+        return {!f_is_inf, {i_face, i_edge}};
     }
 
     void TMesh::triangle_split(const Point &p, IndexType i_face)
@@ -671,7 +669,20 @@ namespace gam
 #ifdef DEBUG
         integrity_check();
         utils::status("[edge_split] Integrity_check passed");
-#endif  
+#endif
+    }
+
+    void TMesh::check_orientation(Face& face)
+    {
+        Point a = Vertex::as_point(m_vertices[face[0]]);
+        Point b = Vertex::as_point(m_vertices[face[1]]);
+        Point c = Vertex::as_point(m_vertices[face[2]]);
+        if (orientation(a, b, c) != 1)
+        {
+            IndexType tmp = face[1];
+            face[1] = face[2];
+            face[2] = tmp;
+        }
     }
 
     void TMesh::insert_outside(const Point &p, IndexType i_face)
@@ -691,8 +702,6 @@ namespace gam
         while (orientation(a, b, p) == 1)
         {
             flip_edge(nf[i], 1);
-            slide_triangle(nf[i]);
-            slide_triangle(m_faces[nf[i]](1));
             i = (i - 1 + nf.size()) % nf.size();
             a = Vertex::as_point(m_vertices[m_faces[nf[i]][1]]);
             b = Vertex::as_point(m_vertices[m_faces[nf[i]][2]]);
@@ -704,8 +713,6 @@ namespace gam
         while (orientation(a, b, p) == 1)
         {
             flip_edge(nf[i], 2);
-            slide_triangle(nf[i]);
-            slide_triangle(m_faces[nf[i]](2));
             i = (i + 1) % nf.size();
             a = Vertex::as_point(m_vertices[m_faces[nf[i]][1]]);
             b = Vertex::as_point(m_vertices[m_faces[nf[i]][2]]);
@@ -720,19 +727,19 @@ namespace gam
         Face face0 = m_faces[i_face0];
         Face face1 = m_faces[i_face1];
 
-        m_faces[i_face0][0] = face0[i_edge0];
-        m_faces[i_face0][1] = face0[(i_edge0 + 1) % 3];
-        m_faces[i_face0][2] = face1[i_edge1];
-        m_faces[i_face0](0) = face1((i_edge1 + 1) % 3);
-        m_faces[i_face0](1) = i_face1;
-        m_faces[i_face0](2) = face0((i_edge0 + 2) % 3);
+        m_faces[i_face0][0] = face0[(i_edge0 + 1) % 3];
+        m_faces[i_face0][1] = face1[i_edge1];
+        m_faces[i_face0][2] = face0[i_edge0];
+        m_faces[i_face0](0) = i_face1;
+        m_faces[i_face0](1) = face0((i_edge0 + 2) % 3);
+        m_faces[i_face0](2) = face1((i_edge1 + 1) % 3);
 
-        m_faces[i_face1][0] = face1[i_edge1];
-        m_faces[i_face1][1] = face1[(i_edge1 + 1) % 3];
-        m_faces[i_face1][2] = face0[i_edge0];
-        m_faces[i_face1](0) = face0((i_edge0 + 1) % 3);
-        m_faces[i_face1](1) = i_face0;
-        m_faces[i_face1](2) = face1((i_edge1 + 2) % 3);
+        m_faces[i_face1][0] = face1[(i_edge1 + 1) % 3];
+        m_faces[i_face1][1] = face0[i_edge0];
+        m_faces[i_face1][2] = face1[i_edge1];
+        m_faces[i_face1](0) = i_face0;
+        m_faces[i_face1](1) = face1((i_edge1 + 2) % 3);
+        m_faces[i_face1](2) = face0((i_edge0 + 1) % 3);
 
         m_vertices[face0[(i_edge0 + 1) % 3]].FaceIndex = i_face0;
         m_vertices[face1[(i_edge1 + 1) % 3]].FaceIndex = i_face1;
@@ -752,10 +759,11 @@ namespace gam
 
         clear();
 
-        if (point_count == -1) point_count = points.size();
+        if (point_count == -1)
+            point_count = points.size();
 
         m_values.reserve(points.size());
-        for (const auto& p : points)
+        for (const auto &p : points)
         {
             m_values.emplace_back(p.z);
         }
@@ -763,16 +771,19 @@ namespace gam
         m_vertices.reserve(points.size() + 1);
 
         m_vertices.emplace_back(0., 0., -1., 1);
-        
+
         m_vertices.emplace_back(points[0].x, points[0].y, 0, 0);
         m_vertices.emplace_back(points[1].x, points[1].y, 0, 0);
         m_vertices.emplace_back(points[2].x, points[2].y, 0, 0);
 
         m_faces.emplace_back(1, 2, 3, 2, 3, 1);
+        check_orientation(m_faces[0]); 
 
-        m_faces.emplace_back(0, 2, 1, 0, 3, 2);
-        m_faces.emplace_back(0, 3, 2, 0, 1, 3);
-        m_faces.emplace_back(0, 1, 3, 0, 2, 1);
+        Face face0 = m_faces[0];
+
+        m_faces.emplace_back(0, face0[1], face0[0], 0, face0(1), face0(0));
+        m_faces.emplace_back(0, face0[2], face0[1], 0, face0(2), face0(1));
+        m_faces.emplace_back(0, face0[0], face0[2], 0, face0(0), face0(2));
 
         for (int i = 3; i < point_count; ++i)
         {
@@ -788,24 +799,25 @@ namespace gam
 
         for (int i = 1; i < vertex_count(); ++i)
         {
-            m_vertices[i].Z = m_values[i-1];
+            m_vertices[i].Z = m_values[i - 1];
         }
     }
-
 
     void TMesh::delaunay_check() const
     {
         for (int i_face = 0; i_face < face_count(); ++i_face)
         {
-            if (is_infinite_face(i_face)) continue;
+            if (is_infinite_face(i_face))
+                continue;
             Face face = m_faces[i_face];
             Point a = Vertex::as_point(m_vertices[face[0]]);
             Point b = Vertex::as_point(m_vertices[face[1]]);
             Point c = Vertex::as_point(m_vertices[face[2]]);
-            
+
             for (auto n : face.Neighbors)
             {
-                if (is_infinite_face(n)) continue;
+                if (is_infinite_face(n))
+                    continue;
                 int i_edge = m_faces[n].get_edge(i_face);
                 Point p = Vertex::as_point(m_vertices[m_faces[n][i_edge]]);
                 assert(!in_circle(p, a, b, c));
@@ -815,7 +827,7 @@ namespace gam
 
     void TMesh::integrity_check() const
     {
-        // Check the integrity of the vertices of the mesh. 
+        // Check the integrity of the vertices of the mesh.
         for (IndexType i = 0; i < vertex_count(); ++i)
         {
             int i_face = m_vertices[i].FaceIndex;
@@ -827,6 +839,11 @@ namespace gam
         for (IndexType i = 0; i < face_count(); ++i)
         {
             auto face = m_faces[i];
+            if (is_infinite_face(i))
+            {
+                assert(face[0] == 0);
+            }
+
             for (int j = 0; j < 3; ++j)
             {
                 auto neighbor = m_faces[face(j)];

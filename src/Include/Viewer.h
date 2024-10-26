@@ -37,6 +37,8 @@ private:
     int render_demo_buttons();
     int render_menu_bar();
 
+    void set_infinite_z(Mesh& mesh);
+
 private:
     Mesh m_grid;
     Mesh m_object;
