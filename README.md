@@ -62,7 +62,7 @@ cd /path/to/gam && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build bu
 
 # Fonctionnalités de l'application
 
-![Application](./data/rapport/application.png){  style="display: block; margin: 0 auto" }
+![Application](./data/rapport/application.png)
 
 L'application comporte trois fenêtres dockables :
 - *Statistics* : Affichage des performances de l'application ainsi que des informations sur la géométrie comme le nombre de sommets / faces.   
@@ -71,7 +71,7 @@ L'application comporte trois fenêtres dockables :
 
 ##### Présentation Détaillées : 
 
-![Application](./data/rapport/laplacian_demo.png){  style="display: block; margin: 0 auto" }
+![Application](./data/rapport/laplacian_demo.png)
 
 - `a1` : Image par secondes.
 - `a2` : Temps CPU. 
@@ -123,7 +123,7 @@ La méthode `load_off` de la classe `TMesh` permet de charger un fichier .off en
 
 Pour visualiser le maillage, la méthode `save_obj` permet de sauvegarder sa géométrie comme la position de ses sommets, leurs valeurs (en tant que coordonnées de texture), leurs normales ainsi que la topologie du maillage.
 
-![Maillage triangulaire](./data/rapport/mesh.png "Maillage triangulaire"){  style="display: block; margin: 0 auto" }
+![Maillage triangulaire](./data/rapport/mesh.png "Maillage triangulaire")
 
 ## Diffusion de la chaleur
 
@@ -143,7 +143,7 @@ avec :
 Grace à cette formule, on peut calculer u_i[t+\delta t] pour chaque sommet du maillage, à chaque pas de temps $\delta t$.
 
 Avec le sommet d'indice 0 à *100* et un pas de temps de *1e-5* , on obtient ceci :
-![Diffusion de chaleur](./data/rapport/heat_diffusion.png "Diffusion de chaleur"){  style="display: block; margin: 0 auto" }
+![Diffusion de chaleur](./data/rapport/heat_diffusion.png "Diffusion de chaleur")
 
 ## Normales
 
@@ -155,26 +155,26 @@ $$
 
 La courbure peut être positive ou négative selon si la forme est concave ou convexe. Si l'on prend la valeur calculée précédemment comme étant la normale, certaines seront inversées :
 
-![Normales inversées](./data/rapport/normal_orientation.png "Normales inversées"){  style="display: block; margin: 0 auto" }
+![Normales inversées](./data/rapport/normal_orientation.png "Normales inversées")
 
 Pour déterminer si une normale doit être inversée, on effectue un test de direction avec l'une des normales des faces voisines au sommet. Si le produit scalaire entre la normale de la face voisine et le vecteur calculé précédemment est négatif, on l'inverse. On obtient ceci :
-![Smooth normal](./data/rapport/smooth_normal.png "Smooth normal"){  style="display: block; margin: 0 auto" }
+![Smooth normal](./data/rapport/smooth_normal.png "Smooth normal")
 
 Couleur du maillage en fonction des normales aux sommets :
 
-![Smooth normal](./data/rapport/normal2.png "Smooth normal"){  style="display: block; margin: 0 auto" }
+![Smooth normal](./data/rapport/normal2.png "Smooth normal")
 
 L'application permet d'afficher les normales aux sommets ainsi que les normales aux faces en appuyant sur la touche `n`:
-![Normal](./data/rapport/normal.png "Normal"){  style="display: block; margin: 0 auto" }
+![Normal](./data/rapport/normal.png "Normal")
 
 ## Courbure
 
 Pour calculer la courbure, on prend la norme du vecteur calculé en utilisant le laplacien et on normalise cette valeur entre 0 et 1 (pour pouvoir l'utiliser par la suite comme coordonnées de texture) en la divisant par le maximum. On obtient ceci :
-![Courbure](./data/rapport/courbure.png "Courbure"){  style="display: block; margin: 0 auto" }
+![Courbure](./data/rapport/courbure.png "Courbure")
 
 # Triangulation de Delaunay
 
-![Alpes](./data/rapport/alpes.png "Courbure"){  style="display: block; margin: 0 auto" }
+![Alpes](./data/rapport/alpes.png "Courbure")
 
 ## Fonctions de couture
 
@@ -187,7 +187,7 @@ Pour effectuer une insertion de point dans le maillage, on a besoin de créer tr
 ### Triangle Split
 
 ##### Schéma :
-![triangle split](./data/rapport/triangle_split.png){  style="display: block; margin: 0 auto" }
+![triangle split](./data/rapport/triangle_split.png)
 
 ##### Code :
 
@@ -226,14 +226,14 @@ void triangle_split(const Point& p, IndexType i_face)
 
 ##### Résultat :
 
-![triangle split](./data/rapport/triangle_split_result.png){  style="display: block; margin: 0 auto" }
+![triangle split](./data/rapport/triangle_split_result.png)
 **Note** : Le point qui n'est pas relié au maillage est le point à l'infinie.
 
 
 ### Edge Split
 
 ##### Schéma :
-![edge split](./data/rapport/edge_split.png){  style="display: block; margin: 0 auto" }
+![edge split](./data/rapport/edge_split.png)
 
 ##### Code : 
 
@@ -285,12 +285,12 @@ void TMesh::edge_split(const Point &p, IndexType i_face0, IndexType i_edge0)
 
 ##### Résultat :
 
-![edge split](./data/rapport/edge_split_result.png){  style="display: block; margin: 0 auto" }
+![edge split](./data/rapport/edge_split_result.png)
 
 ### Flip Edge
 
 ##### Schéma :
-![edge split](./data/rapport/flip_edge.png){  style="display: block; margin: 0 auto" }
+![edge split](./data/rapport/flip_edge.png)
 
 ##### Code : 
 
@@ -415,21 +415,21 @@ Si toutes les arêtes de la face ont été testées et qu'aucun triangle constru
 
 Un cas particulier concernant la présence du point à insérer sur une des arêtes de la face est à considérer. Le test d'orientation est un simple calcul de déterminant de la matrice suivante :
 
-![predicat d'orientation](./data/rapport/orientation.png){  style="display: block; margin: 0 auto" }
+![predicat d'orientation](./data/rapport/orientation.png)
 
 avec $p$, $q$ et $r$ les sommets du triangle. 
 
 Ce test d'orientation retourne 1 si le triangle est orienté dans le sens trigonométrique, -1 si orienté dans le sens horaire et 0 si les points sont colinéaires. Dans nos tests d'orientation lors de la recherche de la face qui contient le point à insérer, il peut arriver que le point soit aligné avec l'une des arêtes de la face considérée sans pour autant être à l'intérieur de cette même face. 
 
 ##### Schéma (alignement du point avec une arête):
-![cas particulier](./data/rapport/locate_triangle2.png){  style="display: block; margin: 0 auto" }
+![cas particulier](./data/rapport/locate_triangle2.png)
 
 Sur le schéma ci-dessus, le point est aligné avec l'arête de la face mais ne se situe pas à l'intérieur. On doit donc vérifier l'arête suivante pour déterminer si oui ou non le point est à l'intérieur de la face. 
 
 Voici une illustration de l'algorithme pour la première face :
 
 ##### Schéma (déroulement de l'algorithme sur la première face):
-![localisation de triangle](./data/rapport/locate_triangle.png){  style="display: block; margin: 0 auto" }
+![localisation de triangle](./data/rapport/locate_triangle.png)
 
 
 Le processus est répété jusqu'à ce que le triangle contenant le point soit trouvé, ou bien que le triangle courrant soit une face infinie. Sur l'exemple ci-dessus, l'algorithme s'arrête sur la face infinie d'indice 9, ce qui activera une insertion en dehors de l'enveloppe convexe.
@@ -441,7 +441,7 @@ Lorsque le point se trouve en dehors de l'enveloppe convexe, il faut s'assurer d
 La première opération effectuée est un `triangle_split` qui nous place dans la configuration `3.` du schéma ci-dessus :
 
 ##### Schéma :
-![insertion hors de l'enveloppe convexe](./data/rapport/outside_scheme.png){  style="display: block; margin: 0 auto" }
+![insertion hors de l'enveloppe convexe](./data/rapport/outside_scheme.png)
 
 Ensuite, il faut itérer sur les arêtes externes à droite et à gauche de l'arête de départ. Tant qu'une arête est visible par le point (test d'orientation), on applique un `flip_edge`. 
 
@@ -488,7 +488,7 @@ void TMesh::insert_outside(const Point &p, IndexType i_face)
 
 ##### Résultat : 
 
-![insertion hors de l'enveloppe convexe (résultat)](./data/rapport/outside_insertion.gif){  style="display: block; margin: 0 auto" }
+![insertion hors de l'enveloppe convexe (résultat)](./data/rapport/outside_insertion.gif)
 
 ## Triangulation de Delaunay : Méthode iterative (Lawson)
 
@@ -502,7 +502,7 @@ L'idée est la suivante :
 - On s'arrête lorsque la pile est vide. 
 
 
-![Prédicat in_circle](./data/rapport/in_circle.png){  style="display: block; margin: 0 auto" }
+![Prédicat in_circle](./data/rapport/in_circle.png)
 
 ##### Code : 
 
@@ -562,13 +562,13 @@ void TMesh::lawson(IndexType i_vertex)
 
 ##### Schéma (triangluation de Delaunay lors de l'insertion d'un point):
 
-![Méthode iterative (Lawson)](./data/rapport/lawson_iterative.png){  style="display: block; margin: 0 auto" }
+![Méthode iterative (Lawson)](./data/rapport/lawson_iterative.png)
 
 ##### Resultats
 
 ##### Comparaison insertion naïve sans (à gauche) et avec (à droite) la triangulation de Delaunay : 
 
-![triangulation naïve vs de Delaunay](./data/rapport/triangulation_resultat.png){  style="display: block; margin: 0 auto" }
+![triangulation naïve vs de Delaunay](./data/rapport/triangulation_resultat.png)
 
 ##### Insertion itérative :
 
