@@ -95,8 +95,7 @@ private:
     int m_dttus{0}; //! Delaunay Triangulation Time (us)
 
     float m_infinite_point_z{1.0};
-    float m_scale_x{1.0};
-    float m_scale_y{1.0};
+    float m_scale{1.0};
 
     int m_point_count{-1};
     int m_insertion_count{1};

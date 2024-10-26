@@ -572,7 +572,7 @@ void TMesh::lawson(IndexType i_vertex)
 
 ##### Insertion itérative :
 
-![lawson iteratif](./data/rapport/lawson_iterative.gif){ style="display: block; margin: 0 auto" }
+![lawson iteratif](./data/rapport/lawson_iterative.gif)
 
 ##### Quelques statistiques :
 

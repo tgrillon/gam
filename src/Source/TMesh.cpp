@@ -144,39 +144,58 @@ namespace gam
 #endif
         file.close();
     }
-    void TMesh::save_obj(const std::string &obj_file, bool use_curvature)
+    void TMesh::save_obj(const std::string &obj_file, bool use_curvature, bool remove_inf)
     {
         std::ofstream file(std::string(OBJ_DIR) + obj_file);
         file << "OBJ" << "\n";
 
-        file << vertex_count() << " " << face_count() << " " << 0 << "\n";
+        int f_count = face_count();
+        int v_count = vertex_count();
+        if (remove_inf)
+        {
+            v_count--;
+            for (const auto& f : m_faces)
+            {
+                if (is_infinite_face(f)) f_count--; 
+            }
+        }
+
+        file << v_count << " " << f_count << " " << 0 << "\n";
 
         // Save vertices position
-        for (const auto &v : m_vertices)
+        for (int i = remove_inf ? 1 : 0; i < vertex_count(); ++i)
         {
+            auto v = m_vertices[i];
             file << "v " << v.X << " " << v.Y << " " << v.Z << "\n";
         }
-        // Save textcoords
-        auto &data = use_curvature ? m_curvature : m_values;
-        for (const auto &v : data)
+
+        if (!remove_inf)
         {
-            file << "vt " << v << " " << v << "\n";
+            // Save textcoords
+            auto &data = use_curvature ? m_curvature : m_values;
+            for (auto v : data)
+            {
+                file << "vt " << v << " " << v << "\n";
+            }
+
+            // Save vertices normals
+            for (auto n : m_normals)
+            {
+                file << "vn " << n.x << " " << n.y << " " << n.z << "\n";
+            }
         }
-        // Save vertices normals
-        for (const auto &n : m_normals)
-        {
-            file << "vn " << n.x << " " << n.y << " " << n.z << "\n";
-        }
+
         // Save topology
         for (const auto &f : m_faces)
         {
+            if (remove_inf && is_infinite_face(f)) continue;
             file << "f ";
-            file << (f.Vertices[0] + 1) << "/" << (f.Vertices[0] + 1) << "/" << (f.Vertices[0] + 1) << " ";
-            file << (f.Vertices[1] + 1) << "/" << (f.Vertices[1] + 1) << "/" << (f.Vertices[1] + 1) << " ";
-            file << (f.Vertices[2] + 1) << "/" << (f.Vertices[2] + 1) << "/" << (f.Vertices[2] + 1) << "\n";
+            file << (f[0] + (remove_inf ? 0 : 1)) << "/" << (f[0] + (remove_inf ? 0 : 1)) << "/" << (f[0] + (remove_inf ? 0 : 1)) << " ";
+            file << (f[1] + (remove_inf ? 0 : 1)) << "/" << (f[1] + (remove_inf ? 0 : 1)) << "/" << (f[1] + (remove_inf ? 0 : 1)) << " ";
+            file << (f[2] + (remove_inf ? 0 : 1)) << "/" << (f[2] + (remove_inf ? 0 : 1)) << "/" << (f[2] + (remove_inf ? 0 : 1)) << "\n";
         }
         file.close();
-        utils::status("File ", obj_file, " successfully saved");
+        utils::status("File ", obj_file, " successfully saved in data/obj");
     }
 
     IndexType TMesh::local_index(IndexType i_vertex, IndexType i_face) const
@@ -537,7 +556,12 @@ namespace gam
 
     bool TMesh::is_infinite_face(IndexType i_face) const
     {
-        return m_faces[i_face][0] == 0 || m_faces[i_face][1] == 0 || m_faces[i_face][2] == 0;
+        return is_infinite_face(m_faces[i_face]);
+    }
+
+    bool TMesh::is_infinite_face(Face face) const
+    {
+        return face[0] == 0 || face[1] == 0 || face[2] == 0;
     }
 
     std::pair<bool, std::pair<int, int>> TMesh::locate_triangle(const Point &p) const

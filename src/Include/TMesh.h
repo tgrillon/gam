@@ -46,7 +46,7 @@ namespace gam
         void load_off(const std::string &off_file);
 
         //! Save the mesh as an .obj file.
-        void save_obj(const std::string &obj_file, bool use_curvature = false);
+        void save_obj(const std::string &obj_file, bool use_curvature = false, bool remove_inf = false);
 
         //! Get the local index for a vertex located on the face of index `i_face`.
         IndexType local_index(IndexType i_vertex, IndexType i_face) const;
@@ -121,6 +121,7 @@ namespace gam
 
         //! Returns true if i_face is an infinite faces, false otherwise. 
         bool is_infinite_face(IndexType i_face) const;
+        bool is_infinite_face(Face face) const;
 
         //! Use for infinite faces, they must have the infinite point (of index 0) as first vertex (local index 0). This method check if the infinite face is well constructed, if not it do the necessary operation. 
         void slide_triangle(IndexType i_face);

@@ -53,7 +53,7 @@ GLuint read_program(const std::string &filepath)
     return read_program(filepath.c_str());
 }
 
-Viewer::Viewer() : App(1024, 640), m_framebuffer(window_width(), window_height()), m_obj_file("/queen.obj")
+Viewer::Viewer() : App(1024, 640), m_framebuffer(window_width(), window_height()), m_obj_file("")
 {
     m_camera.projection(window_width(), window_height(), 45);
 }
@@ -109,7 +109,8 @@ int Viewer::init_programs()
 
 int Viewer::init_laplacian_demo()
 {
-    m_laplacian.load_off("/cube.off");
+    m_file_name = "cube";
+    m_laplacian.load_off("/" + m_file_name + ".off");
     m_laplacian.vertex_value(0, 100);
     m_laplacian.smooth_normals();
     m_laplacian.curvature();
@@ -127,11 +128,11 @@ int Viewer::init_laplacian_demo()
 
 int Viewer::init_delaunay_demo()
 {
-    m_file_cloud = "blue_noise"; 
+    m_file_cloud = "blue_noise";
     m_points = utils::read_point_set("/blue_noise.txt");
 
-    auto rd = std::random_device {}; 
-    auto rng = std::default_random_engine { rd() };
+    auto rd = std::random_device{};
+    auto rng = std::default_random_engine{rd()};
     std::shuffle(std::begin(m_points), std::end(m_points), rng);
 
     m_timer.start();
@@ -239,8 +240,8 @@ int Viewer::handle_events()
 
             auto [x, y] = ImGui::GetMousePos();
 
-            x = x - window_min.x; 
-            y = y - window_min.y; 
+            x = x - window_min.x;
+            y = y - window_min.y;
 
             float xf = (2.f * x / static_cast<float>(window_max.x - window_min.x)) - 1.f;
             float yf = 1.f - (2.f * y / static_cast<float>(window_max.y - window_min.y));
@@ -254,7 +255,7 @@ int Viewer::handle_events()
             Point camera_position = m_camera.position();
 
             Vector direction(camera_position, world_point);
-            float time = - camera_position.z / direction.z;
+            float time = -camera_position.z / direction.z;
             Point point = camera_position + time * direction;
             m_delaunay.insert_vertex(point);
             m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
@@ -461,7 +462,6 @@ int Viewer::render_laplacian_params()
     if (ImGui::Button("Load mesh", ImVec2(-FLT_MIN, 35.0f)))
     {
         m_laplacian.load_off("/" + m_file_name + ".off");
-        m_obj_file = "/" + m_file_name + ".obj";
         m_laplacian.vertex_value(0, 100);
         m_laplacian.smooth_normals();
         m_laplacian.curvature();
@@ -469,6 +469,23 @@ int Viewer::render_laplacian_params()
 
         center_camera(m_object);
     }
+    ImGui::SeparatorText("SAVE MESH");
+    ImGui::InputTextWithHint("OBJ filename", "my_mesh", &m_obj_file);
+    if (ImGui::Button("Save mesh as OBJ", ImVec2(-FLT_MIN, 35.0f)))
+    {
+        if (m_obj_file.empty() || m_obj_file == "")
+        {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(1000, 9999);
+
+            int id = dis(gen);
+            m_obj_file = m_file_name + std::to_string(id);
+        }
+        m_laplacian.save_obj("/" + m_obj_file + ".obj");
+        m_obj_file = "";
+    }
+
     ImGui::SeparatorText("SCENE");
 
     // ImGui::InputText("Obj name", );
@@ -505,7 +522,7 @@ int Viewer::render_laplacian_stats()
     return 0;
 }
 
-void Viewer::set_infinite_z(Mesh& mesh)
+void Viewer::set_infinite_z(Mesh &mesh)
 {
     Point pmin, pmax;
     mesh.bounds(pmin, pmax);
@@ -532,25 +549,25 @@ int Viewer::render_delaunay_params()
         set_infinite_z(m_object2);
     }
 
-    if(ImGui::SliderFloat("Infinite point Z", &m_infinite_point_z, 0.01, 10000.0, "%.2f"))
+    if (ImGui::SliderFloat("Infinite point Z", &m_infinite_point_z, 0.01, 10000.0, "%.2f"))
     {
         set_infinite_z(m_object2);
     }
 
+    ImGui::SeparatorText("LOAD FILE");
     ImGui::InputTextWithHint("Points cloud", "ex : alpes_random_2", &m_file_cloud);
-    ImGui::InputFloat("X Scale", &m_scale_x);
-    ImGui::InputFloat("Y Scale", &m_scale_y);   
+    ImGui::InputFloat("Scale", &m_scale);
     ImGui::SliderInt("Loading percentage (%)", &m_loading_percentage, 0, 100);
     ImGui::Checkbox("Shuffle", &m_shuffle);
     if (ImGui::Button("Load m_points cloud", ImVec2(-FLT_MIN, 35.0f)))
     {
-        m_points = utils::read_point_set("/" + m_file_cloud + ".txt", m_scale_x, m_scale_y);
+        m_points = utils::read_point_set("/" + m_file_cloud + ".txt", m_scale, m_scale, m_scale);
         m_point_count = std::max(3, static_cast<int>(m_loading_percentage * 0.01f * m_points.size()));
 
         if (m_shuffle)
         {
-            auto rd = std::random_device {}; 
-            auto rng = std::default_random_engine { rd() };
+            auto rd = std::random_device{};
+            auto rng = std::default_random_engine{rd()};
             std::shuffle(std::begin(m_points), std::end(m_points), rng);
         }
 
@@ -566,6 +583,7 @@ int Viewer::render_delaunay_params()
         center_camera(m_object2);
     }
 
+    ImGui::SeparatorText("INSERTION");
     int max_insertion_count = m_points.size() - m_object2.vertex_count() + 1;
     ImGui::BeginDisabled(m_point_count >= m_points.size());
     ImGui::SliderInt("Insertion count", &m_insertion_count, 1, std::max(max_insertion_count, 1));
@@ -573,7 +591,7 @@ int Viewer::render_delaunay_params()
     {
         m_insertion_count = std::min(m_insertion_count, max_insertion_count);
 
-        Timer timer; 
+        Timer timer;
 
         timer.start();
         for (int i = 0; i < m_insertion_count; ++i)
@@ -593,6 +611,23 @@ int Viewer::render_delaunay_params()
         set_infinite_z(m_object2);
     }
     ImGui::EndDisabled();
+
+    ImGui::SeparatorText("SAVE MESH");
+    ImGui::InputTextWithHint("OBJ filename", "my_mesh", &m_obj_file);
+    if (ImGui::Button("Save mesh as OBJ", ImVec2(-FLT_MIN, 35.0f)))
+    {
+        if (m_obj_file.empty() || m_obj_file == "")
+        {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(1000, 9999);
+
+            int id = dis(gen);
+            m_obj_file = m_file_cloud + std::to_string(id);
+        }
+        m_delaunay.save_obj("/" + m_obj_file + ".obj", false, true);
+        m_obj_file = "";
+    }
 
     return 0;
 }
