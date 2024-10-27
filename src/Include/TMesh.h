@@ -13,12 +13,11 @@ namespace gam
 
         Mesh mesh(bool curvature = true, bool remove_infinite = false) const;
 
+        //! Set a vertex position. 
+        void vertex(IndexType i_vertex, const Point& p) { assert(i_vertex < vertex_count()); m_vertices[i_vertex] = p; } 
+
         //! Set the vertex value at index i.
-        inline void vertex_value(IndexType i_vertex, ScalarType v)
-        {
-            assert(i_vertex < vertex_count());
-            m_values[i_vertex] = v;
-        }
+        void vertex_value(IndexType i_vertex, ScalarType v);
 
         //! Set the values of all vertices.
         inline void vertices_values(const std::vector<ScalarType> &values) { m_values = values; }
@@ -27,11 +26,7 @@ namespace gam
         inline void reset_values() { m_values = std::vector<ScalarType>(vertex_count(), 0.); }
 
         //! Get the vertex value at index i.
-        inline ScalarType vertex_value(IndexType i_vertex) const
-        {
-            assert(i_vertex < vertex_count());
-            return m_values[i_vertex];
-        }
+        ScalarType vertex_value(IndexType i_vertex) const;
 
         //! Get the values of all vertices.
         inline std::vector<ScalarType> vertices_values() const { return m_values; }
@@ -45,8 +40,11 @@ namespace gam
         //! Load and triangulate a mesh from an OFF file.
         void load_off(const std::string &off_file);
 
-        //! Save the mesh as an .obj file.
+        //! Save the mesh as a .obj file.
         void save_obj(const std::string &obj_file, bool use_curvature = false, bool remove_inf = false);
+
+        //! Save the mesh as a .off file.
+        void save_off(const std::string &off_file, bool remove_inf = false);
 
         //! Get the local index for a vertex located on the face of index `i_face`.
         IndexType local_index(IndexType i_vertex, IndexType i_face) const;

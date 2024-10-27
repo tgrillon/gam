@@ -69,9 +69,11 @@ L'application comporte trois fenêtres dockables :
 - *Control Panel* : Panneau de contrôle de l'application. L'utilisateur peut activer/désactiver différents paramètres comme l'affichage des sommets/arêtes/faces, charger un fichier .off (*Laplacian Demo*) ou un nuage de point via un fichier .txt (*Delaunay Demo*). Il peut aussi modifier la couleur couleur de différents éléments (maillage, arêtes, sommets, etc...). 
 - *Viewport* : Fenêtre d'affichage de l'application. L'utilisateur peut interagir avec l'objet visualisé (rotation, translation, zoom...). 
 
+![Dockable Windows](./data/rapport/dockable_windows.gif)
+
 ##### Présentation Détaillées : 
 
-![Application](./data/rapport/laplacian_demo.png)
+![Application](./data/rapport/laplacian_demo.png) 
 
 - `a1` : Image par secondes.
 - `a2` : Temps CPU. 
@@ -85,14 +87,18 @@ L'application comporte trois fenêtres dockables :
 - `c2` : Basculer sur la démo du TP2 (Delaunay). 
 --
 - *Laplacian Demo* 
-    - `d1` : Charger un fichier .off présent dans `data/off/_.off`.
-    - `d2` : [`n`] --> Afficher/Cacher les normales aux faces/sommets.
-    - `d3` : [`m`] --> Coloration du maillage par rapport aux normales aux sommets.
-    - `d4` : [`s`] --> Basculer du flat shading au smooth shading. 
-    - `d5` : [`c`] --> Afficher/Cacher la courbure.
-    - `d6` : [`h`] --> Lancer la simulation de la diffusion de chaleur.
+    - `d1` : Nom du fichier .off à Charger. Il doit être présent dans `data/off`.
+    - `d2` : Charge le fichier. 
+    - `d3` : Nom du fichier sauvegardé. Si vide, le nom du fichier .off charger est utilisé concaténé avec un nombre aléatoire.  
+    - `d4` : Choix du format de fichier pour la sauvegarde.
+    - `d5` : Sauvegarde le fichier dans `data/off` si le format `off` est sélectionné, dans `data/obj` si le format `obj` est sélectionné.
+    - `d6` : [`n`] --> Afficher/Cacher les normales aux faces/sommets.
+    - `d7` : [`m`] --> Coloration du maillage par rapport aux normales aux sommets.
+    - `d8` : [`s`] --> Basculer du flat shading au smooth shading. 
+    - `d9` : [`c`] --> Afficher/Cacher la courbure.
+    - `d10` : [`h`] --> Lancer la simulation de la diffusion de chaleur.
 
-![Application](./data/rapport/delaunay_demo.png)  
+![Application](./data/rapport/delaunay_demo.png)   
  
 - *Delaunay Demo*
     - [`LCTRL`] --> Ajouter un point au maillage (projection de la position de la sourie en 3D sur le plan Z=0).
@@ -101,13 +107,12 @@ L'application comporte trois fenêtres dockables :
     - `f2` : [`i`] --> Afficher/Cacher les faces infinies.  
     - `f3` : Changer la valeur en z du point à l'infinie.  
     - `f4` : Nom de fichier contenant les coordonnées des points que l'on souhaite insérer.    
-    - `f5` : Applique une homotéthie sur l'axe X des points en entrées.    
-    - `f6` : Applique une homotéthie sur l'axe Y des points en entrées.    
-    - `f7` : Pourcentage du nuage de points que l'on souhaite charger (0% insérera uniquement les trois premier points pour former la première face).   
-    - `f8` : Mélange (si coché) le jeu de donnée en entrée (les points ne seront pas inséré dans l'ordre définit dans le fichier).   
-    - `f9` : Charger le maillage / Lancer l'insertion/la triangulation des points.   
-    - `f10` : Définir le nombre de points insérés à chaque clique sur `Next Insertion`.   
-    - `f11` : Insérer le/les points suivants (Disponible si des points du nuage de points n'ont pas encore été insérés).
+    - `f5` : Applique une homotéthie sur les points en entrées.    
+    - `f6` : Pourcentage du nuage de points que l'on souhaite charger (0% insérera uniquement les trois premier points pour former la première face).   
+    - `f7` : Mélange (si coché) le jeu de donnée en entrée (les points ne seront pas inséré dans l'ordre définit dans le fichier).   
+    - `f8` : Charger le maillage / Lancer l'insertion/la triangulation des points.   
+    - `f9` : Définir le nombre de points insérés à chaque clique sur `Next Insertion`.   
+    - `f10` : Insérer le/les points suivants (Disponible si des points du nuage de points n'ont pas encore été insérés).
 
 # Rapport
 

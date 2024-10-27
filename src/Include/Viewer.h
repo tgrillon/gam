@@ -37,7 +37,7 @@ private:
     int render_demo_buttons();
     int render_menu_bar();
 
-    void set_infinite_z(Mesh& mesh);
+    void set_infinite_z(Mesh& mesh, gam::TMesh& tmesh);
 
 private:
     Mesh m_grid;
@@ -54,7 +54,7 @@ private:
     GLuint m_program_points;
     GLuint m_heat_diffusion_tex;
 
-    std::string m_obj_file;
+    std::string m_saved_file;
     std::string m_file_name;
     std::string m_file_cloud;
 
@@ -89,7 +89,9 @@ private:
     bool m_show_points{false};
 
     bool m_show_infinite_faces{false};
-    bool m_shuffle{false};
+    bool m_shuffle{true};
+    
+    int m_save_as_obj{1};
 
     int m_dttms{0}; //! Delaunay Triangulation Time (ms)
     int m_dttus{0}; //! Delaunay Triangulation Time (us)

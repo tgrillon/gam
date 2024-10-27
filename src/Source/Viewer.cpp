@@ -53,7 +53,7 @@ GLuint read_program(const std::string &filepath)
     return read_program(filepath.c_str());
 }
 
-Viewer::Viewer() : App(1024, 640), m_framebuffer(window_width(), window_height()), m_obj_file("")
+Viewer::Viewer() : App(1024, 640), m_framebuffer(window_width(), window_height()), m_saved_file("")
 {
     m_camera.projection(window_width(), window_height(), 45);
 }
@@ -470,20 +470,29 @@ int Viewer::render_laplacian_params()
         center_camera(m_object);
     }
     ImGui::SeparatorText("SAVE MESH");
-    ImGui::InputTextWithHint("OBJ filename", "my_mesh", &m_obj_file);
-    if (ImGui::Button("Save mesh as OBJ", ImVec2(-FLT_MIN, 35.0f)))
+    ImGui::InputTextWithHint("filename", "my_mesh", &m_saved_file);
+    ImGui::RadioButton("OBJ", &m_save_as_obj, 1); ImGui::SameLine();
+    ImGui::RadioButton("OFF", &m_save_as_obj, 0);
+    if (ImGui::Button("Save mesh", ImVec2(-FLT_MIN, 35.0f)))
     {
-        if (m_obj_file.empty() || m_obj_file == "")
+        if (m_saved_file.empty() || m_saved_file == "")
         {
             std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_int_distribution<> dis(1000, 9999);
 
             int id = dis(gen);
-            m_obj_file = m_file_name + std::to_string(id);
+            m_saved_file = m_file_name + std::to_string(id);
         }
-        m_laplacian.save_obj("/" + m_obj_file + ".obj");
-        m_obj_file = "";
+        if (m_save_as_obj)
+        {
+            m_laplacian.save_obj("/" + m_saved_file + ".obj");
+        }
+        else
+        {
+            m_laplacian.save_off("/" + m_saved_file + ".off");
+        }
+        m_saved_file = "";
     }
 
     ImGui::SeparatorText("SCENE");
@@ -522,13 +531,14 @@ int Viewer::render_laplacian_stats()
     return 0;
 }
 
-void Viewer::set_infinite_z(Mesh &mesh)
+void Viewer::set_infinite_z(Mesh &mesh, gam::TMesh& tmesh)
 {
     Point pmin, pmax;
     mesh.bounds(pmin, pmax);
     Point mid = center(pmin, pmax);
     mid.z = -m_infinite_point_z;
-    mesh.vertex(0, mid);
+    tmesh.vertex(0, mid);
+    mesh = tmesh.mesh(true, !m_show_infinite_faces);
 }
 
 int Viewer::render_delaunay_params()
@@ -546,12 +556,11 @@ int Viewer::render_delaunay_params()
     if (ImGui::Checkbox("Infinite faces (i)", &m_show_infinite_faces))
     {
         m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
-        set_infinite_z(m_object2);
     }
 
     if (ImGui::SliderFloat("Infinite point Z", &m_infinite_point_z, 0.01, 10000.0, "%.2f"))
     {
-        set_infinite_z(m_object2);
+        set_infinite_z(m_object2, m_delaunay);
     }
 
     ImGui::SeparatorText("LOAD FILE");
@@ -579,7 +588,6 @@ int Viewer::render_delaunay_params()
         m_dttus = m_timer.us();
         m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
 
-        set_infinite_z(m_object2);
         center_camera(m_object2);
     }
 
@@ -607,26 +615,34 @@ int Viewer::render_delaunay_params()
         m_dttus = m_dttus % 1000;
 
         m_object2 = m_delaunay.mesh(true, !m_show_infinite_faces);
-
-        set_infinite_z(m_object2);
     }
     ImGui::EndDisabled();
 
     ImGui::SeparatorText("SAVE MESH");
-    ImGui::InputTextWithHint("OBJ filename", "my_mesh", &m_obj_file);
-    if (ImGui::Button("Save mesh as OBJ", ImVec2(-FLT_MIN, 35.0f)))
+    ImGui::InputTextWithHint("filename", "my_mesh", &m_saved_file);
+    ImGui::RadioButton("OBJ", &m_save_as_obj, 1); ImGui::SameLine();
+    ImGui::RadioButton("OFF", &m_save_as_obj, 0);
+    if (ImGui::Button("Save mesh", ImVec2(-FLT_MIN, 35.0f)))
     {
-        if (m_obj_file.empty() || m_obj_file == "")
+        if (m_saved_file.empty() || m_saved_file == "")
         {
             std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_int_distribution<> dis(1000, 9999);
 
             int id = dis(gen);
-            m_obj_file = m_file_cloud + std::to_string(id);
+            m_saved_file = m_file_cloud + std::to_string(id);
         }
-        m_delaunay.save_obj("/" + m_obj_file + ".obj", false, true);
-        m_obj_file = "";
+
+        if (m_save_as_obj)
+        {
+            m_delaunay.save_obj("/" + m_saved_file + ".obj", false, true);
+        }
+        else
+        {
+            m_delaunay.save_off("/" + m_saved_file + ".off");
+        }
+        m_saved_file = "";
     }
 
     return 0;

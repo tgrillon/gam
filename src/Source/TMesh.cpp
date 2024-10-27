@@ -40,6 +40,18 @@ namespace gam
         return mesh;
     }
 
+    void TMesh::vertex_value(IndexType i_vertex, ScalarType v)
+    {
+        assert(i_vertex < vertex_count());
+        m_values[i_vertex] = v;
+    }
+
+    ScalarType TMesh::vertex_value(IndexType i_vertex) const
+    {
+        assert(i_vertex < vertex_count());
+        return m_values[i_vertex];
+    }
+
     void gam::TMesh::load_off(const std::string &off_file)
     {
         m_vertices.clear();
@@ -95,12 +107,12 @@ namespace gam
             if (m_vertices[v2].FaceIndex == -1)
                 m_vertices[v2].FaceIndex = i;
             // Set vertex indices of the face i
-            m_faces[i].Vertices[0] = v0;
-            assert(m_faces[i].Vertices[0] != -1);
-            m_faces[i].Vertices[1] = v1;
-            assert(m_faces[i].Vertices[1] != -1);
-            m_faces[i].Vertices[2] = v2;
-            assert(m_faces[i].Vertices[2] != -1);
+            m_faces[i][0] = v0;
+            assert(m_faces[i][0] != -1);
+            m_faces[i][1] = v1;
+            assert(m_faces[i][1] != -1);
+            m_faces[i][2] = v2;
+            assert(m_faces[i][2] != -1);
             // Set neighboring faces using the edges
             // Edge v0-v1
             if (map.find({v0, v1}) == map.end() && map.find({v1, v0}) == map.end())
@@ -190,12 +202,64 @@ namespace gam
         {
             if (remove_inf && is_infinite_face(f)) continue;
             file << "f ";
-            file << (f[0] + (remove_inf ? 0 : 1)) << "/" << (f[0] + (remove_inf ? 0 : 1)) << "/" << (f[0] + (remove_inf ? 0 : 1)) << " ";
-            file << (f[1] + (remove_inf ? 0 : 1)) << "/" << (f[1] + (remove_inf ? 0 : 1)) << "/" << (f[1] + (remove_inf ? 0 : 1)) << " ";
-            file << (f[2] + (remove_inf ? 0 : 1)) << "/" << (f[2] + (remove_inf ? 0 : 1)) << "/" << (f[2] + (remove_inf ? 0 : 1)) << "\n";
+            if (remove_inf)
+            {
+                file << (f[0] + 0) << "/" << (f[0] + 0) << "/" << (f[0] + 0) << " ";
+                file << (f[1] + 0) << "/" << (f[1] + 0) << "/" << (f[1] + 0) << " ";
+                file << (f[2] + 0) << "/" << (f[2] + 0) << "/" << (f[2] + 0) << "\n";
+            }
+            else 
+            {
+                file << (f[0] + 1) << "/" << (f[0] + 1) << "/" << (f[0] + 1) << " ";
+                file << (f[1] + 1) << "/" << (f[1] + 1) << "/" << (f[1] + 1) << " ";
+                file << (f[2] + 1) << "/" << (f[2] + 1) << "/" << (f[2] + 1) << "\n";
+            }
         }
         file.close();
         utils::status("File ", obj_file, " successfully saved in data/obj");
+    }
+
+    void TMesh::save_off(const std::string &off_file, bool remove_inf)
+    {
+        std::ofstream file(std::string(OFF_DIR) + off_file);
+        file << "OFF" << "\n";
+
+        int f_count = face_count();
+        int v_count = vertex_count();
+        if (remove_inf)
+        {
+            v_count--;
+            for (const auto& f : m_faces)
+            {
+                if (is_infinite_face(f)) f_count--; 
+            }
+        }
+
+        file << v_count << " " << f_count << " " << 0 << "\n";
+
+        // Save vertices position
+        for (int i = remove_inf ? 1 : 0; i < vertex_count(); ++i)
+        {
+            auto v = m_vertices[i];
+            file << v.X << " " << v.Y << " " << v.Z << "\n";
+        }
+
+        // Save topology
+        for (const auto &f : m_faces)
+        {
+            if (remove_inf && is_infinite_face(f)) continue;
+            file << "3 ";
+            if (remove_inf)
+            {
+                file << (f[0] - 1) << " " << (f[1] - 1) << " " << (f[2] - 1) << "\n";
+            }
+            else 
+            {
+                file << (f[0] - 0) << " " << (f[1] - 0) << " " << (f[2] - 0) << "\n";
+            }
+        }
+        file.close();
+        utils::status("File ", off_file, " successfully saved in data/off");
     }
 
     IndexType TMesh::local_index(IndexType i_vertex, IndexType i_face) const
