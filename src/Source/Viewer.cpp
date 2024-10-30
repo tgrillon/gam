@@ -475,7 +475,7 @@ int Viewer::render_laplacian_params()
     ImGui::RadioButton("OFF", &m_save_as_obj, 0);
     if (ImGui::Button("Save mesh", ImVec2(-FLT_MIN, 35.0f)))
     {
-        if (m_saved_file.empty() || m_saved_file == "")
+        if (m_saved_file.empty())
         {
             std::random_device rd;
             std::mt19937 gen(rd());
@@ -624,7 +624,7 @@ int Viewer::render_delaunay_params()
     ImGui::RadioButton("OFF", &m_save_as_obj, 0);
     if (ImGui::Button("Save mesh", ImVec2(-FLT_MIN, 35.0f)))
     {
-        if (m_saved_file.empty() || m_saved_file == "")
+        if (m_saved_file.empty())
         {
             std::random_device rd;
             std::mt19937 gen(rd());

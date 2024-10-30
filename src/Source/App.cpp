@@ -77,33 +77,36 @@ int App::prerender()
         }
     }
 
-    const char *orbiter_filename = "app_orbiter.txt";
-    // copy / export / write orbiter
-    if (key_state('o'))
+    if (!io.WantCaptureKeyboard)
     {
-        clear_key_state('o');
-        m_camera.write_orbiter(orbiter_filename);
-    }
-    // paste / read orbiter
-    if (key_state('o') && key_state(SDLK_LCTRL))
-    {
-        clear_key_state('o');
-        clear_key_state(SDLK_LCTRL);
+        const char *orbiter_filename = "app_orbiter.txt";
+        // copy / export / write orbiter
+        if (key_state('o'))
+        {
+            clear_key_state('o');
+            m_camera.write_orbiter(orbiter_filename);
+        }
+        // paste / read orbiter
+        if (key_state('o') && key_state(SDLK_LCTRL))
+        {
+            clear_key_state('o');
+            clear_key_state(SDLK_LCTRL);
 
-        Orbiter tmp;
-        if (tmp.read_orbiter(orbiter_filename) < 0)
-            // ne pas modifer la camera en cas d'erreur de lecture...
-            tmp = m_camera;
+            Orbiter tmp;
+            if (tmp.read_orbiter(orbiter_filename) < 0)
+                // ne pas modifer la camera en cas d'erreur de lecture...
+                tmp = m_camera;
 
-        m_camera = tmp;
-    }
+            m_camera = tmp;
+        }
 
-    // screenshot
-    if (key_state(SDLK_F1))
-    {
-        static int calls = 1;
-        clear_key_state(SDLK_F1);
-        screenshot("app", calls++);
+        // screenshot
+        if (key_state(SDLK_F1))
+        {
+            static int calls = 1;
+            clear_key_state(SDLK_F1);
+            screenshot("app", calls++);
+        }
     }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -194,7 +197,7 @@ bool App::event_imgui()
 
 void App::center_camera(const Mesh &mesh)
 {
-    Point pmin, pmax; 
+    Point pmin, pmax;
     mesh.bounds(pmin, pmax);
     m_camera.lookat(pmin, pmax);
 }
