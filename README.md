@@ -590,3 +590,5 @@ void TMesh::lawson(IndexType i_vertex)
 | noise_random_1.txt   | 10000            | ~37 ms 301 us                                             |
 | noise_random_2.txt   | 20000            | ~76 ms 031 us                                             |
 | alpes_random_2.txt   | 30000            | ~118 ms 024 us                                            |
+
+**Note:** Testé sur un *HP Victus by HP Gaming Laptop 15-fa0xxx*
