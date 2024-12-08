@@ -530,7 +530,7 @@ void TMesh::lawson(IndexType i_vertex)
         IndexType i_face0 = to_check.top();
         to_check.pop();
 
-        // Si face infinit, on passe à la prochaine arête. 
+        // Si face infinie, on passe à la prochaine arête. 
         if (is_infinite_face(i_face0))
             continue;
 
