@@ -105,7 +105,7 @@ L'application comporte trois fenêtres dockables :
     - `b3` : Temps triangulation de Delaunay (Insertion du nuage de points).
     - `f1` : Centrer la caméra sur l'objet. Calcule la boîte englobante de l'objet pour qu'il soit entièrement visible par la caméra. 
     - `f2` : [`i`] --> Afficher/Cacher les faces infinies.  
-    - `f3` : Changer la valeur en z du point à l'infinie.  
+    - `f3` : Changer la valeur en z du point à l'infini.  
     - `f4` : Nom de fichier contenant les coordonnées des points que l'on souhaite insérer.    
     - `f5` : Applique une homotéthie sur les points en entrées.    
     - `f6` : Pourcentage du nuage de points que l'on souhaite charger (0% insérera uniquement les trois premier points pour former la première face).   
@@ -232,7 +232,7 @@ void triangle_split(const Point& p, IndexType i_face)
 ##### Résultat :
 
 ![triangle split](./data/rapport/triangle_split_result.png)
-**Note** : Le point qui n'est pas relié au maillage est le point à l'infinie.
+**Note** : Le point qui n'est pas relié au maillage est le point à l'infini.
 
 
 ### Edge Split
@@ -348,7 +348,7 @@ Avant de gérer l'insertion des points dans le maillage, on construit la premiè
 ##### Code : 
 
 ```c++
-// Ajout du point à l'infinie (indice 0)
+// Ajout du point à l'infini (indice 0)
 m_vertices.emplace_back(0., 0., -1., 1); 
 
 // Ajout des trois premiers sommets. 
@@ -457,9 +457,9 @@ Pour se faciliter la vie, on définit les faces infinies de sorte que le point �
 ```c++
 void TMesh::insert_outside(const Point &p, IndexType i_face)
 {
-    auto nf = neighboring_faces_of_vertex(0); // Récupération des faces voisines du point à l'infinie. 
+    auto nf = neighboring_faces_of_vertex(0); // Récupération des faces voisines du point à l'infini. 
 
-    int itf = std::find(nf.begin(), nf.end(), i_face) - nf.begin(); // On récupère l'idice de la face de départ dans les faces voisines du point à l'infinie.
+    int itf = std::find(nf.begin(), nf.end(), i_face) - nf.begin(); // On récupère l'idice de la face de départ dans les faces voisines du point à l'infini.
 
     triangle_split(p, i_face); // Première opération, insert le point dans le maillage.
 
