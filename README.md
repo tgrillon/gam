@@ -571,7 +571,7 @@ void TMesh::lawson(IndexType i_vertex)
 
 ##### Resultats
 
-##### Comparaison insertion naïve sans (à gauche) et avec (à droite) la triangulation de Delaunay : 
+##### Comparaison insertion naïve (à gauche) vs insertion avec lawson itératif (à droite) : 
 
 ![triangulation naïve vs de Delaunay](./data/rapport/triangulation_resultat.png)
 
