@@ -13,3 +13,4 @@ build_release/
 **/compile_commands.json
 
 .vscode/
+.idea/
