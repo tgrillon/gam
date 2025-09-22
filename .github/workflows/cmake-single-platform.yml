@@ -1,0 +1,58 @@
+name: CMake on a single platform
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
+
+    env:
+      BUILD_TYPE: ${{ matrix.build_type }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+
+        # Install tools and compilers
+        sudo apt-get install -y \
+          g++ \
+          git \
+          doxygen \
+          graphviz \
+          lcov \
+          cppcheck \
+          clang-format \
+          valgrind \
+          ninja-build \
+          wget \
+          tar
+
+        # Remove old CMake if necessary
+        sudo apt-get remove --purge --auto-remove -y cmake
+
+        # Install CMake >= 3.26 manually
+        CMAKE_VERSION=3.26.4
+        wget https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz
+        tar -xzvf cmake-$CMAKE_VERSION-linux-x86_64.tar.gz
+        sudo cp -r cmake-$CMAKE_VERSION-linux-x86_64/* /usr/local/
+        cmake --version
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 16
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}}
