@@ -198,18 +198,18 @@ Pour effectuer une insertion de point dans le maillage, on a besoin de créer tr
 
 ```c++
 // Insertion du point p à l'intérieur de la face d'indice i_face.
-void triangle_split(const Point& p, IndexType i_face) 
+void triangle_split(const Point& p, index_t i_face) 
 // p : Le point que l'on veut insérer.
 // i_face : L'indice de la face contenant p.
 {  
     Face face = m_faces[i_face]; // Récupération d'une copie de la face d'indice i_face.
-    IndexType i_vertex = vertex_count(); // Récupération de l'indice du point que l'on veut insérer.
+    index_t i_vertex = vertex_count(); // Récupération de l'indice du point que l'on veut insérer.
 
     m_vertices.emplace_back(p, i_face); // Ajout du point dans le maillage.
 
     // Récupération de l'indice des deux nouvelles faces que l'on veut ajouter.
-    IndexType i_face2 = face_count(); 
-    IndexType i_face3 = face_count() + 1;
+    index_t i_face2 = face_count(); 
+    index_t i_face3 = face_count() + 1;
 
     // Mise à jour de la topologie de la face i_face.
     m_faces[i_face][2] = i_vertex;
@@ -244,22 +244,22 @@ void triangle_split(const Point& p, IndexType i_face)
 
 ```c++
 // Insertion du point p sur une arête. faisant partie de la face i_face0 (l'arête joint deux triangles, face0 est l'une des deux), opposée à l'indice local d'indice i_edge0.
-void TMesh::edge_split(const Point &p, IndexType i_face0, IndexType i_edge0)
+void TMesh::edge_split(const Point &p, index_t i_face0, index_t i_edge0)
 // p : point que l'on veut insérer. 
 // i_face0 : indice d'une des deux faces contenant l'arête. 
 // i_edge0 : indice local du sommet opposé à l'arête dans la face i_face0. 
 {
-    IndexType i_vertex = vertex_count(); // Récupération de l'indice du point que l'on veut insérer.
+    index_t i_vertex = vertex_count(); // Récupération de l'indice du point que l'on veut insérer.
 
     m_vertices.emplace_back(p, i_face0); // Ajout du point dans le maillage. 
 
     // Récupération des indices des deux nouvelles faces qui vont être créées.
-    IndexType i_face2 = face_count();  
-    IndexType i_face3 = face_count() + 1;
+    index_t i_face2 = face_count();  
+    index_t i_face3 = face_count() + 1;
 
     
-    IndexType i_face1 = m_faces[i_face0](i_edge0); // Récupération de la seconde face comportant l'arête. 
-    IndexType i_edge1 = m_faces[i_face1].get_edge(i_face0); // Récupération de l'indice local du sommet opposée à l'arête dans la seconde face. 
+    index_t i_face1 = m_faces[i_face0](i_edge0); // Récupération de la seconde face comportant l'arête. 
+    index_t i_edge1 = m_faces[i_face1].get_edge(i_face0); // Récupération de l'indice local du sommet opposée à l'arête dans la seconde face. 
 
     // Récupération d'une copie de chaque face (elles sont utilisées pour construire les nouvelles faces et mettre à jour les anciennes). 
     Face face0 = m_faces[i_face0];  
@@ -301,12 +301,12 @@ void TMesh::edge_split(const Point &p, IndexType i_face0, IndexType i_edge0)
 
 ```c++
 // Basculer une arête.
-void TMesh::flip_edge(IndexType i_face0, IndexType i_edge0)
+void TMesh::flip_edge(index_t i_face0, index_t i_edge0)
 // i_face0 : indice d'une des deux faces contenant l'arête. 
 // i_edge0 : indice local du sommet opposé à l'arête dans la face i_face0. 
 {
-    IndexType i_face1 = m_faces[i_face0](i_edge0); // Récupération de l'indice de la seconde face contenant l'arête. 
-    IndexType i_edge1 = m_faces[i_face1].get_edge(i_face0); // Récupération de l'indice local du sommet opposé à l'arête. 
+    index_t i_face1 = m_faces[i_face0](i_edge0); // Récupération de l'indice de la seconde face contenant l'arête. 
+    index_t i_edge1 = m_faces[i_face1].get_edge(i_face0); // Récupération de l'indice local du sommet opposé à l'arête. 
 
     // Récupération d'une copie de chaque face. 
     Face face0 = m_faces[i_face0];
@@ -455,7 +455,7 @@ Pour se faciliter la vie, on définit les faces infinies de sorte que le point �
 ##### Code : 
 
 ```c++
-void TMesh::insert_outside(const Point &p, IndexType i_face)
+void TMesh::insert_outside(const Point &p, index_t i_face)
 {
     auto nf = neighboring_faces_of_vertex(0); // Récupération des faces voisines du point à l'infini. 
 
@@ -513,12 +513,12 @@ L'idée est la suivante :
 
 ```c++
 // Triangulation de Delaunay à l'insertion d'un point. Cette méthode est appelé après l'insertion naïve du point.
-void TMesh::lawson(IndexType i_vertex)
+void TMesh::lawson(index_t i_vertex)
 // i_vertex : indice du point inséré.
 {
     auto faces = neighboring_faces_of_vertex(i_vertex); // Récupération des faces voisines.  
 
-    std::stack<IndexType> to_check; // Déclaration de la pile. 
+    std::stack<index_t> to_check; // Déclaration de la pile. 
 
     // Ajout des indices de face dans la pile. On aura simplement à récupérer l'indice local du point inséré pour trouver l'arête dans la face considérée. 
     for (auto i_face : faces)
@@ -527,7 +527,7 @@ void TMesh::lawson(IndexType i_vertex)
     while (!to_check.empty()) 
     {
         // Récupération de la face courante. 
-        IndexType i_face0 = to_check.top();
+        index_t i_face0 = to_check.top();
         to_check.pop();
 
         // Si face infinie, on passe à la prochaine arête. 
@@ -536,10 +536,10 @@ void TMesh::lawson(IndexType i_vertex)
 
         // Récupération de l'indice local du point opposé à l'arête. 
         Face face0 = m_faces[i_face0];
-        IndexType i_edge0 = local_index(i_vertex, i_face0);
+        index_t i_edge0 = local_index(i_vertex, i_face0);
         
         // Récupération de l'indice de la face voisine. 
-        IndexType i_face1 = face0(i_edge0);
+        index_t i_face1 = face0(i_edge0);
 
         // Si cette face est infinie, on passe à la prochaine arête. 
         if (is_infinite_face(i_face1))
@@ -547,7 +547,7 @@ void TMesh::lawson(IndexType i_vertex)
 
         // Test qui vérifie si le point opposé à l'arête dans la face voisine est à l'intérieur du cercle circonscrit au triangle de la face 0 (face récupérée depuis la pile). 
         Face face1 = m_faces[i_face1];
-        IndexType i_edge1 = face1.get_edge(i_face0);
+        index_t i_edge1 = face1.get_edge(i_face0);
 
         Vertex p = m_vertices[face1[i_edge1]];
         Vertex a = m_vertices[face0[0]];
