@@ -1,4 +1,4 @@
-PROJECT_NAME           = "Cricket"
+PROJECT_NAME           = "GAM"
 OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUT_DIRECTORY@
 INPUT                  = @DOX_INPUTS@
 FILE_PATTERNS          = *.h *.hpp *.cpp

@@ -23,7 +23,7 @@ function(Doxygen target input)
   set(HTML_HEADER "${DOXYGEN_HTML_HEADER}")
 
   # Configure le Doxyfile
-  configure_file(${CMAKE_SOURCE_DIR}/Cricket/CMake/Doxyfile.in ${DOXYFILE_CONFIG} @ONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/cmake/Doxyfile.in ${DOXYFILE_CONFIG} @ONLY)
 
   # Déclare la cible
   add_custom_target(${NAME}

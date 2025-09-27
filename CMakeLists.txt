@@ -8,18 +8,29 @@ include(CTest)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-# Fetching gkit library 
-add_subdirectory(vendor/gkit)
-# Fetching imgui library 
-add_subdirectory(vendor/imgui)
+# Enable IPO (interprocedural optimization), if possible
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ${ipo_supported})
 
-add_subdirectory(src)
+include(Coverage)
+include(Format)
+include(CppCheck)
+include(Doxygen)
 
+# Building external libs 
+add_subdirectory(vendor)
+
+# Building sources
+add_subdirectory(src bin)
+
+Doxygen(gam src)
 
 # Data directories setup
 set(DATA_DIR "${CMAKE_SOURCE_DIR}/data" CACHE PATH "Path to the data directory")
@@ -45,6 +56,8 @@ foreach (target gam gam_static)
     )
 endforeach ()
 
+
 # For unit testing
+include(Testing)
 add_subdirectory(test)
 
