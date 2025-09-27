@@ -4,6 +4,17 @@
 Standard: Latest
 ColumnLimit: 120
 
+# Include sorting
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"PCH/PCH\.h"'
+    Priority: 1
+  - Regex: '^".*"'
+    Priority: 2
+  - Regex: '^<.*>'
+    Priority: 3
+
 # Brace wrapping options
 BreakBeforeBraces: Custom
 BraceWrapping:
