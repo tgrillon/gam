@@ -5,22 +5,25 @@
 class Framebuffer
 {
 public:
-    Framebuffer(unsigned int width, unsigned int height);
-    ~Framebuffer();
+	Framebuffer() = default;
+	Framebuffer(const uint32_t width, const uint32_t height);
+	~Framebuffer();
 
-    static std::shared_ptr<Framebuffer> create(unsigned int width, unsigned int height);
+	static std::shared_ptr<Framebuffer> create(const uint32_t width, const uint32_t height);
 
-    inline void bind() const { glBindFramebuffer(GL_FRAMEBUFFER, m_fbo); }
-    inline void unbind() const { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+	inline void bind() const { glBindFramebuffer(GL_FRAMEBUFFER, m_fbo); }
 
-    inline GLuint texture_id() const { return m_texture_id; }
+	inline void unbind() const { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 
-    void rescale(unsigned int width, unsigned int height);
+	inline GLuint texture_id() const { return m_texture_id; }
+
+	void rescale(const uint32_t width, const uint32_t height);
 
 private:
-    GLuint m_fbo;
-    GLuint m_rbo;
-    GLuint m_texture_id;
+	GLuint m_fbo{};
+	GLuint m_rbo{};
+	GLuint m_texture_id{};
 
-    unsigned int m_width, m_height;
+	uint32_t m_width{};
+	uint32_t m_height{};
 };

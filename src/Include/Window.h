@@ -8,7 +8,7 @@
 //! \file
 //! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements. cf tuto1.cpp pour un exemple complet.
 
-typedef SDL_Window *Window;
+typedef SDL_Window* Window;
 
 //! creation d'une fenetre pour l'application.
 Window create_window(const int width, const int height, const int major = 3, const int minor = 2, const int samples = 0);
@@ -68,14 +68,14 @@ int last_event_count();
 int events(Window window);
 
 //! renvoie le chemin(path) vers le fichier 'filename' apres l'avoir cherche dans un repertoire standard...
-const char *smart_path(const char *filename);
+const char* smart_path(const char* filename);
 
 //! drag/drop, renvoie le dernier fichier.
-const char *drop_event();
+const char* drop_event();
 //! desactive drag/drop.
 void clear_drop_event();
 //! drag/drop. recupere tous les fichiers.
-const std::vector<std::string> &drop_events();
+const std::vector<std::string>& drop_events();
 //! desactive drag/drop.
 void clear_drop_events();
 
