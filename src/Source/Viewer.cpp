@@ -2,6 +2,8 @@
 
 #include "PCH/PCH.h"
 
+#include "Utils.h"
+
 Mesh make_grid(const int n = 10)
 {
 	Mesh grid = Mesh(GL_LINES);

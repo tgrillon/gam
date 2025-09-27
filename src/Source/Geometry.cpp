@@ -2,6 +2,8 @@
 
 #include "PCH/PCH.h"
 
+#include "Utils.h"
+
 namespace gam
 {
 scalar_t cotan(const Vector& u, const Vector& v)

@@ -2,6 +2,8 @@
 
 #include "PCH/PCH.h"
 
+#include "Utils.h"
+
 App::App(const int width, const int height, const int major, const int minor, const int samples)
 {
 	m_window = create_window(width, height, major, minor, samples);

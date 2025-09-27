@@ -2,6 +2,8 @@
 
 #include "PCH/PCH.h"
 
+#include "Utils.h"
+
 static float aspect = 1;
 
 static int width = 0;
@@ -334,8 +336,8 @@ void release_window(Window window)
 #ifndef NO_GLEW
 #	ifndef GK_RELEASE
 
-static void DEBUGCALLBACK debug_print(
-	GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* userParam)
+static void DEBUGCALLBACK
+debug_print(GLenum, GLenum, unsigned int, GLenum severity, GLsizei, const char* message, const void*)
 {
 	static std::set<std::string> log;
 	if(log.insert(message).second == false)

@@ -2,6 +2,8 @@
 
 #include "PCH/PCH.h"
 
+#include "Utils.h"
+
 namespace gam
 {
 /************************* Triangulated Mesh **************************/
@@ -330,12 +332,12 @@ std::vector<index_t> TMesh::neighboring_faces_of_vertex(index_t i_vertex) const
 	std::vector<index_t> neighbors;
 	neighbors.emplace_back(m_vertices[i_vertex].FaceIndex);
 	index_t localVertexIndex = local_index(i_vertex, neighbors[0]);
-	index_t currentFaceIndex = m_faces[neighbors[0]].NeighborIndices[(localVertexIndex + 1) % 3];
+	index_t currentFaceIndex = m_faces[neighbors[0]].NeighborIndices[IndexHelpers::Next[localVertexIndex]];
 	while(currentFaceIndex != neighbors[0])
 	{
 		neighbors.emplace_back(currentFaceIndex);
 		localVertexIndex = local_index(i_vertex, currentFaceIndex);
-		currentFaceIndex = m_faces[currentFaceIndex].NeighborIndices[(localVertexIndex + 1) % 3];
+		currentFaceIndex = m_faces[currentFaceIndex].NeighborIndices[IndexHelpers::Next[localVertexIndex]];
 	}
 
 	return neighbors;
@@ -350,14 +352,14 @@ std::vector<index_t> TMesh::neighboring_vertices_of_vertex(index_t i_vertex) con
 	index_t startFaceIndex = m_vertices[i_vertex].FaceIndex;
 	index_t currentFaceIndex = startFaceIndex;
 	index_t localIndex = local_index(i_vertex, currentFaceIndex);
-	index_t nextVertexLocalIndex = (localIndex + 1) % 3;
+	index_t nextVertexLocalIndex = IndexHelpers::Next[localIndex];
 	index_t nextVertexGlobalIndex = m_faces[currentFaceIndex].VertexIndices[nextVertexLocalIndex];
 	neighbors.emplace_back(nextVertexGlobalIndex);
 	currentFaceIndex = m_faces[currentFaceIndex].NeighborIndices[nextVertexLocalIndex];
 	while(currentFaceIndex != startFaceIndex)
 	{
 		localIndex = local_index(i_vertex, currentFaceIndex);
-		nextVertexLocalIndex = (localIndex + 1) % 3;
+		nextVertexLocalIndex = IndexHelpers::Next[localIndex];
 		nextVertexGlobalIndex = m_faces[currentFaceIndex].VertexIndices[nextVertexLocalIndex];
 		neighbors.emplace_back(nextVertexGlobalIndex);
 		currentFaceIndex = m_faces[currentFaceIndex].NeighborIndices[nextVertexLocalIndex];
@@ -654,7 +656,7 @@ std::pair<bool, std::pair<int32_t, int8_t>> TMesh::locate_triangle(const Point& 
 
 		if(i_edge_to_avoid != -1)
 		{
-			i_edge = (i_edge_to_avoid + 1) % 3;
+			i_edge = IndexHelpers::Next[i_edge_to_avoid];
 		}
 		else
 		{
@@ -663,8 +665,8 @@ std::pair<bool, std::pair<int32_t, int8_t>> TMesh::locate_triangle(const Point& 
 
 		bool p_intersect_f = false;
 		int tmp_i_edge = -1;
-		Point a = m_vertices[m_faces[i_face][(i_edge + 2) % 3]].as_point();
-		Point b = m_vertices[m_faces[i_face][(i_edge + 1) % 3]].as_point();
+		Point a = m_vertices[m_faces[i_face][IndexHelpers::Previous[i_edge]]].as_point();
+		Point b = m_vertices[m_faces[i_face][IndexHelpers::Next[i_edge]]].as_point();
 		while(!p_in_f && (o = orientation(a, b, p)) < 1) // clockwise or on edge
 		{
 			if(o == 0)
@@ -687,8 +689,8 @@ std::pair<bool, std::pair<int32_t, int8_t>> TMesh::locate_triangle(const Point& 
 				continue;
 			}
 
-			a = m_vertices[m_faces[i_face][(i_edge + 2) % 3]].as_point();
-			b = m_vertices[m_faces[i_face][(i_edge + 1) % 3]].as_point();
+			a = m_vertices[m_faces[i_face][IndexHelpers::Previous[i_edge]]].as_point();
+			b = m_vertices[m_faces[i_face][IndexHelpers::Next[i_edge]]].as_point();
 		}
 
 		if(p_in_f)
@@ -745,19 +747,30 @@ void TMesh::edge_split(const Point& p, index_t i_face0, index_t i_edge0)
 	Face face0 = m_faces[i_face0];
 	Face face1 = m_faces[i_face1];
 
-	m_faces[i_face0].set_vertex_indices(face0[i_edge0], face0[(i_edge0 + 1) % 3], i_vertex);
-	m_faces[i_face0].set_neighbor_indices(face0(i_edge0), i_face3, face0((i_edge0 + 2) % 3));
+	m_faces[i_face0].set_vertex_indices(
+		face0[IndexHelpers::Current[i_edge0]], face0[IndexHelpers::Next[i_edge0]], i_vertex);
+	m_faces[i_face0].set_neighbor_indices(
+		face0(IndexHelpers::Current[i_edge0]), i_face3, face0(IndexHelpers::Previous[i_edge0]));
 
-	m_faces[i_face1].set_vertex_indices(face1[i_edge1], i_vertex, face1[(i_edge1 + 2) % 3]);
-	m_faces[i_face1].set_neighbor_indices(face1(i_edge1), face1((i_edge1 + 1) % 3), i_face2);
+	m_faces[i_face1].set_vertex_indices(
+		face1[IndexHelpers::Current[i_edge1]], i_vertex, face1[IndexHelpers::Previous[i_edge1]]);
+	m_faces[i_face1].set_neighbor_indices(
+		face1(IndexHelpers::Current[i_edge1]), face1(IndexHelpers::Next[i_edge1]), i_face2);
 
-	m_faces.emplace_back(face1[i_edge1], face1[(i_edge1 + 1) % 3], i_vertex, i_face3, i_face1, face1((i_edge1 + 2) % 3));
-	m_faces.emplace_back(face0[i_edge0], i_vertex, face0[(i_edge0 + 2) % 3], i_face2, face0((i_edge0 + 1) % 3), i_face0);
+	m_faces.emplace_back(
+		face1[i_edge1],
+		face1[IndexHelpers::Next[i_edge1]],
+		i_vertex,
+		i_face3,
+		i_face1,
+		face1(IndexHelpers::Previous[i_edge1]));
+	m_faces.emplace_back(
+		face0[i_edge0], i_vertex, face0[IndexHelpers::Previous[i_edge0]], i_face2, face0(IndexHelpers::Next[i_edge0]), i_face0);
 
-	m_vertices[face0[(i_edge0 + 2) % 3]].FaceIndex = i_face2;
+	m_vertices[face0[IndexHelpers::Previous[i_edge0]]].FaceIndex = i_face2;
 
-	m_faces[face0((i_edge0 + 1) % 3)].change_neighbor(i_face0, i_face3);
-	m_faces[face1((i_edge1 + 2) % 3)].change_neighbor(i_face1, i_face2);
+	m_faces[face0(IndexHelpers::Next[i_edge0])].change_neighbor(i_face0, i_face3);
+	m_faces[face1(IndexHelpers::Previous[i_edge1])].change_neighbor(i_face1, i_face2);
 
 #ifdef DEBUG
 	integrity_check();
@@ -820,25 +833,25 @@ void TMesh::flip_edge(index_t i_face0, index_t i_edge0)
 	Face face0 = m_faces[i_face0];
 	Face face1 = m_faces[i_face1];
 
-	m_faces[i_face0][0] = face0[(i_edge0 + 1) % 3];
-	m_faces[i_face0][1] = face1[i_edge1];
-	m_faces[i_face0][2] = face0[i_edge0];
+	m_faces[i_face0][0] = face0[IndexHelpers::Next[i_edge0]];
+	m_faces[i_face0][1] = face1[IndexHelpers::Current[i_edge1]];
+	m_faces[i_face0][2] = face0[IndexHelpers::Current[i_edge0]];
 	m_faces[i_face0](0) = i_face1;
-	m_faces[i_face0](1) = face0((i_edge0 + 2) % 3);
-	m_faces[i_face0](2) = face1((i_edge1 + 1) % 3);
+	m_faces[i_face0](1) = face0(IndexHelpers::Previous[i_edge0]);
+	m_faces[i_face0](2) = face1(IndexHelpers::Next[i_edge1]);
 
-	m_faces[i_face1][0] = face1[(i_edge1 + 1) % 3];
-	m_faces[i_face1][1] = face0[i_edge0];
-	m_faces[i_face1][2] = face1[i_edge1];
+	m_faces[i_face1][0] = face1[IndexHelpers::Next[i_edge1]];
+	m_faces[i_face1][1] = face0[IndexHelpers::Current[i_edge0]];
+	m_faces[i_face1][2] = face1[IndexHelpers::Current[i_edge1]];
 	m_faces[i_face1](0) = i_face0;
-	m_faces[i_face1](1) = face1((i_edge1 + 2) % 3);
-	m_faces[i_face1](2) = face0((i_edge0 + 1) % 3);
+	m_faces[i_face1](1) = face1(IndexHelpers::Previous[i_edge1]);
+	m_faces[i_face1](2) = face0(IndexHelpers::Next[i_edge0]);
 
-	m_vertices[face0[(i_edge0 + 1) % 3]].FaceIndex = i_face0;
-	m_vertices[face1[(i_edge1 + 1) % 3]].FaceIndex = i_face1;
+	m_vertices[face0[IndexHelpers::Next[i_edge0]]].FaceIndex = i_face0;
+	m_vertices[face1[IndexHelpers::Next[i_edge1]]].FaceIndex = i_face1;
 
-	m_faces[face0((i_edge0 + 1) % 3)].change_neighbor(i_face0, i_face1);
-	m_faces[face1((i_edge1 + 1) % 3)].change_neighbor(i_face1, i_face0);
+	m_faces[face0(IndexHelpers::Next[i_edge0])].change_neighbor(i_face0, i_face1);
+	m_faces[face1(IndexHelpers::Next[i_edge1])].change_neighbor(i_face1, i_face0);
 
 #ifdef DEBUG
 	integrity_check();
