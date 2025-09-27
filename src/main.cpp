@@ -1,7 +1,7 @@
 #include "Viewer.h"
 
-int main(int argc, char** argv)
+int main()
 {
-    Viewer app;
-    app.run();
+	Viewer app;
+	app.run();
 }
