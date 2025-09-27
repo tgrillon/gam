@@ -7,9 +7,9 @@ using index_t = uint32_t;
 
 namespace IndexHelpers
 {
-uint8_t Next[3]{ 1, 2, 0 };
-uint8_t Current[3]{ 0, 1, 2 };
-uint8_t Previous[3]{ 2, 0, 1 };
+constexpr uint8_t Next[3]{ 1, 2, 0 };
+constexpr uint8_t Current[3]{ 0, 1, 2 };
+constexpr uint8_t Previous[3]{ 2, 0, 1 };
 } // namespace IndexHelpers
 
 struct HashEdgePair

@@ -896,6 +896,7 @@ void TMesh::insert_vertices(const std::vector<Point>& points, int point_count)
 	}
 }
 
+#ifndef NDEBUG
 void TMesh::delaunay_check() const
 {
 	for(index_t i_face = 0; i_face < face_count(); ++i_face)
@@ -903,6 +904,7 @@ void TMesh::delaunay_check() const
 		if(is_infinite_face(i_face))
 			continue;
 		Face face = m_faces[i_face];
+
 		Point a = m_vertices[face[0]].as_point();
 		Point b = m_vertices[face[1]].as_point();
 		Point c = m_vertices[face[2]].as_point();
@@ -911,7 +913,9 @@ void TMesh::delaunay_check() const
 		{
 			if(is_infinite_face(n))
 				continue;
+
 			int i_edge = m_faces[n].get_edge(i_face);
+
 			Point p = m_vertices[m_faces[n][i_edge]].as_point();
 			assert(!in_circle(p, a, b, c));
 		}
@@ -944,4 +948,5 @@ void TMesh::integrity_check() const
 		}
 	}
 }
+#endif
 } // namespace gam

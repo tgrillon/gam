@@ -2,8 +2,8 @@
 
 #include "App.h"
 #include "Framebuffer.h"
-#include "Timer.h"
 #include "TMesh.h"
+#include "Timer.h"
 #include "Utils.h"
 
 class Viewer : public App
@@ -99,7 +99,7 @@ private:
 	float m_infinite_point_z{ 1.0 };
 	float m_scale{ 1.0 };
 
-	int m_point_count{ -1 };
+	uint32_t m_point_count{ 0 };
 	int m_insertion_count{ 1 };
 	int m_loading_percentage{ 100 };
 	std::vector<Point> m_points{};
