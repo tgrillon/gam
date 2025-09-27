@@ -1,5 +1,7 @@
 #include "Utils.h"
 
+#include "PCH/PCH.h"
+
 namespace utils
 {
     std::vector<Point> read_point_set(const std::string &filename, float x_scale, float y_scale, float z_scale)

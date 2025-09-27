@@ -1,6 +1,10 @@
 #include "Framebuffer.h"
 
-Framebuffer::Framebuffer(unsigned int width, unsigned int height) : m_width(width), m_height(height)
+#include "PCH/PCH.h"
+
+Framebuffer::Framebuffer(unsigned int width, unsigned int height)
+	: m_width(width)
+	, m_height(height)
 {
   glGenFramebuffers(1, &m_fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);

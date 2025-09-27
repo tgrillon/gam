@@ -1,7 +1,5 @@
 #pragma once
 
-#include "pch.h"
-
 using namespace std::chrono_literals;
 
 class Timer

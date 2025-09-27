@@ -1,5 +1,6 @@
 #include "Timer.h"
 
+#include "PCH/PCH.h"
 #include "Utils.h"
 
 void Timer::start()

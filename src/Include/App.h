@@ -1,7 +1,5 @@
 #pragma once
 
-#include "pch.h"
-
 #include "Window.h"
 
 const int MAX_FRAMES = 6;

@@ -1,8 +1,11 @@
 //
 // Created by friska on 22/09/25.
 //
-#include <gtest/gtest.h>
+#include "PCH/PCH.h"
+
 #include "TMesh.h"
+
+#include <gtest/gtest.h>
 
 TEST(TMeshTest, FirstUT)
 {

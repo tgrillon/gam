@@ -1,7 +1,5 @@
 #pragma once
 
-#include "pch.h"
-
 namespace gam
 {
     using ScalarType = float;
