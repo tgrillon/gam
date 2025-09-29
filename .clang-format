@@ -1,0 +1,116 @@
+---
+# General
+#Language: Cpp
+Standard: Latest
+ColumnLimit: 120
+
+# Include sorting
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"PCH/PCH\.h"'
+    Priority: 1
+  - Regex: '^".*"'
+    Priority: 2
+  - Regex: '^<.*\.h>'
+    Priority: 3
+  - Regex: '^<.*>'
+    Priority: 4
+
+# Brace wrapping options
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterObjCDeclaration: true
+  AfterExternBlock: true
+  AfterCaseLabel: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  BeforeLambdaBody: true
+  BeforeElse: true
+  BeforeCatch: true
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Always
+AccessModifierOffset: -4
+IndentCaseLabels: true
+NamespaceIndentation: None
+IndentPPDirectives: AfterHash
+BracedInitializerIndentWidth: 4
+
+# Spacing
+Cpp11BracedListStyle: false
+DerivePointerAlignment: false
+PointerAlignment: Left
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: Never
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInContainerLiterals: false
+
+# Alignment
+AlignAfterOpenBracket: AlwaysBreak
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignEscapedNewlines: DontAlign
+AlignOperands: false
+AlignTrailingComments: false
+
+# Single line statement
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: None
+
+# Breaking rules
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeInheritanceComma: false
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+
+# Concepts / requires
+RequiresClausePosition: OwnLine
+IndentRequiresClause: true
+# Penalties: This decide what order things should be done if a line is too long
+PenaltyBreakAssignment: 50
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 0
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 200
+PenaltyExcessCharacter: 10
+PenaltyReturnTypeOnItsOwnLine: 200
+
+SeparateDefinitionBlocks: Always
+
+# Misc
+FixNamespaceComments: true
+BinPackArguments: false
+BinPackParameters: false
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+ReflowComments: false
+SortUsingDeclarations: true
+#AllowShortCompoundRequirementOnASingleLine: true
+RemoveSemicolon: true

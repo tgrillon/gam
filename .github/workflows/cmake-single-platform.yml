@@ -1,0 +1,73 @@
+name: CMake on a single platform
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
+    env:
+      BUILD_TYPE: ${{ matrix.build_type }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive  # In case your vendor libraries are git submodules
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        # Install tools and compilers
+        sudo apt-get install -y \
+          g++ \
+          git \
+          doxygen \
+          graphviz \
+          lcov \
+          cppcheck \
+          clang-format \
+          valgrind \
+          ninja-build \
+          wget \
+          tar
+        
+        # Install OpenGL and graphics libraries
+        sudo apt-get install -y \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          mesa-common-dev \
+          libglew-dev \
+          libglfw3-dev \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          libfreetype6-dev \
+          libfontconfig1-dev \
+          xvfb
+        
+        # Remove old CMake if necessary
+        sudo apt-get remove --purge --auto-remove -y cmake
+        
+        # Install CMake >= 3.26 manually
+        CMAKE_VERSION=3.26.4
+        wget https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz
+        tar -xzvf cmake-$CMAKE_VERSION-linux-x86_64.tar.gz
+        sudo cp -r cmake-$CMAKE_VERSION-linux-x86_64/* /usr/local/
+        cmake --version
+    
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+    
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 16
+    
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      # Use xvfb-run for headless testing if your tests require OpenGL context
+      run: xvfb-run -a ctest -C ${{env.BUILD_TYPE}} --verbose
