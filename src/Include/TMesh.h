@@ -2,6 +2,8 @@
 
 #include "Geometry.h"
 
+#include <cassert>
+
 namespace gam
 {
 //! Triangulated mesh.
@@ -39,7 +41,7 @@ public:
 	inline std::vector<scalar_t> vertices_values() const { return m_values; }
 
 	//! Get the number of vertex of the mesh.
-	inline index_t vertex_count() const { return m_vertices.size(); }
+	inline index_t vertex_count() const { return static_cast<index_t>(m_vertices.size()); }
 
 	//! Get the number of face of the mesh.
 	inline index_t face_count() const { return m_faces.size(); }

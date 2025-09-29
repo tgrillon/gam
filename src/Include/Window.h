@@ -2,6 +2,11 @@
 #ifndef _WINDOW_H
 #define _WINDOW_H
 
+#include <SDL2/SDL.h>
+
+#include <string>
+#include <vector>
+
 //! \addtogroup application utilitaires pour creer une application
 ///@{
 

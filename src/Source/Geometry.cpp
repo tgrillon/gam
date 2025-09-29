@@ -162,13 +162,13 @@ void Face::slide_vertices_right()
 	NeighborIndices[2] = NeighborIndices[1];
 }
 
-void Face::change_neighbor(index_t i_face, index_t value)
+void Face::change_neighbor(index_t i_face, index_t i_neighbor)
 {
 	for(auto& n : NeighborIndices)
 	{
 		if(n == static_cast<int32_t>(i_face))
 		{
-			n = value;
+			n = i_neighbor;
 			break;
 		}
 	}

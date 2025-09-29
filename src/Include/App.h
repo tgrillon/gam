@@ -2,8 +2,19 @@
 
 #include "Window.h"
 
+#include <imgui.h>
+#include <mesh.h>
+#include <orbiter.h>
+
+#include <chrono>
+#include <utility>
+
 const int MAX_FRAMES = 6;
 
+/**
+ * @brief Derived from app.h of GKit 
+ * 
+ */
 class App
 {
 public:
@@ -55,6 +66,7 @@ protected:
 
 	GLuint m_time_query[MAX_FRAMES];
 	GLint64 m_frame_time;
-	int m_frame;
-	int m_cpu_time;
+
+	int m_frame{};
+	int m_cpu_time{};
 };

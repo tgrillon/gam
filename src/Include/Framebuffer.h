@@ -2,6 +2,9 @@
 
 #include "Utils.h"
 
+#include <cstdint>
+#include <memory>
+
 class Framebuffer
 {
 public:

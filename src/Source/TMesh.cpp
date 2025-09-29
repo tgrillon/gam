@@ -637,11 +637,11 @@ bool TMesh::is_infinite_face(Face face) const
 
 std::pair<bool, std::pair<int32_t, int8_t>> TMesh::locate_triangle(const Point& p) const
 {
-	int i_face = 0;
-	int i_edge = 0;
+	int32_t i_face = 0;
+	int8_t i_edge = 0;
 
-	int i_edge_to_avoid = -1;
-	int i_previous_face = -1;
+	int8_t i_edge_to_avoid = -1;
+	int32_t i_previous_face = -1;
 
 	bool f_is_inf = false;
 	bool p_in_f = false;
@@ -656,7 +656,7 @@ std::pair<bool, std::pair<int32_t, int8_t>> TMesh::locate_triangle(const Point& 
 
 		if(i_edge_to_avoid != -1)
 		{
-			i_edge = IndexHelpers::Next[i_edge_to_avoid];
+			i_edge = static_cast<int8_t>(IndexHelpers::Next[i_edge_to_avoid]);
 		}
 		else
 		{
@@ -664,7 +664,7 @@ std::pair<bool, std::pair<int32_t, int8_t>> TMesh::locate_triangle(const Point& 
 		}
 
 		bool p_intersect_f = false;
-		int tmp_i_edge = -1;
+		int8_t tmp_i_edge = -1;
 		Point a = m_vertices[m_faces[i_face][IndexHelpers::Previous[i_edge]]].as_point();
 		Point b = m_vertices[m_faces[i_face][IndexHelpers::Next[i_edge]]].as_point();
 		while(!p_in_f && (o = orientation(a, b, p)) < 1) // clockwise or on edge
@@ -674,7 +674,7 @@ std::pair<bool, std::pair<int32_t, int8_t>> TMesh::locate_triangle(const Point& 
 				p_intersect_f = true;
 				tmp_i_edge = i_edge;
 			}
-			i_edge = (i_edge + 1) % 3;
+			i_edge = static_cast<int8_t>(IndexHelpers::Next[i_edge]);
 			if(i_edge == i_edge_to_avoid)
 			{
 				if(p_intersect_f)
@@ -758,14 +758,19 @@ void TMesh::edge_split(const Point& p, index_t i_face0, index_t i_edge0)
 		face1(IndexHelpers::Current[i_edge1]), face1(IndexHelpers::Next[i_edge1]), i_face2);
 
 	m_faces.emplace_back(
-		face1[i_edge1],
+		face1[IndexHelpers::Current[i_edge1]],
 		face1[IndexHelpers::Next[i_edge1]],
 		i_vertex,
 		i_face3,
 		i_face1,
 		face1(IndexHelpers::Previous[i_edge1]));
 	m_faces.emplace_back(
-		face0[i_edge0], i_vertex, face0[IndexHelpers::Previous[i_edge0]], i_face2, face0(IndexHelpers::Next[i_edge0]), i_face0);
+		face0[IndexHelpers::Current[i_edge0]],
+		i_vertex,
+		face0[IndexHelpers::Previous[i_edge0]],
+		i_face2,
+		face0(IndexHelpers::Next[i_edge0]),
+		i_face0);
 
 	m_vertices[face0[IndexHelpers::Previous[i_edge0]]].FaceIndex = i_face2;
 
@@ -791,12 +796,16 @@ void TMesh::check_orientation(Face& face)
 	}
 }
 
+int count = 0;
+
 void TMesh::insert_outside(const Point& p, index_t i_face)
 {
 	auto nf = neighboring_faces_of_vertex(0);
 
 	int itf = std::find(nf.begin(), nf.end(), i_face) - nf.begin();
 
+	if(count == 0)
+		std::printf("Coucou");
 	triangle_split(p, i_face);
 
 	slide_triangle(face_count() - 1); // we check the last added face.
@@ -823,6 +832,8 @@ void TMesh::insert_outside(const Point& p, index_t i_face)
 		a = m_vertices[m_faces[nf[i]][1]].as_point();
 		b = m_vertices[m_faces[nf[i]][2]].as_point();
 	}
+
+	count++;
 }
 
 void TMesh::flip_edge(index_t i_face0, index_t i_edge0)

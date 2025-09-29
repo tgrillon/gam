@@ -12,8 +12,10 @@ IncludeCategories:
     Priority: 1
   - Regex: '^".*"'
     Priority: 2
-  - Regex: '^<.*>'
+  - Regex: '^<.*\.h>'
     Priority: 3
+  - Regex: '^<.*>'
+    Priority: 4
 
 # Brace wrapping options
 BreakBeforeBraces: Custom
